@@ -1,0 +1,47 @@
+global proc quit()
+{
+	
+	if (saveChanges("") == 0)
+	{
+	    return;
+	}
+
+    /*
+	string $modelPanels[] = `getPanel -type "modelPanel"`;
+	for ($panel in $modelPanels)
+	{
+		if (`optionVar -exists $panel`)
+		{
+			optionVar -remove $panel;
+		}
+	}
+	*/
+	
+	global string $gCommandExecuter[];
+	global string $executerBackupFileName;
+
+	if (`optionVar -q saveActionsScriptEditor`)
+	{
+		string $scriptEditorTempDir = (`internalVar -userPrefDir` + "scriptEditorTemp/");
+		string $tempFiles[] = `getFileList -folder $scriptEditorTempDir`;
+		for ($file in $tempFiles)
+		{
+			sysFile -delete ($scriptEditorTempDir + $file);
+		}
+
+		for($i = 0; $i < size($gCommandExecuter); $i++)
+		{
+			catch(`cmdScrollFieldExecuter -e -storeContents $executerBackupFileName $gCommandExecuter[$i]`);
+		}
+	}
+
+	SavePreferences;
+
+	evalDeferred -lowestPriority "quit2";
+}
+
+global proc quit2()
+{
+	int $pid = getpid();
+	system("taskkill /PID " + $pid + " /f");
+}
