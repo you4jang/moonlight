@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from bean.join import crjoin
+from moon.join import crjoin
 
 
 MENUS = [
@@ -20,9 +20,9 @@ MENUS = [
     #                 'label': 'CC - Animation Scene Manager',
     #                 'image': 'cc/animation_scene_manager.jpg',
     #                 'command': crjoin(
-    #                     'import bean.cc.animation_scene_manager',
-    #                     'reload(bean.cc.animation_scene_manager)',
-    #                     'bean.cc.animation_scene_manager.main()',
+    #                     'import moon.cc.animation_scene_manager',
+    #                     'reload(moon.cc.animation_scene_manager)',
+    #                     'moon.cc.animation_scene_manager.main()',
     #                 ),
     #             },
     #         },
@@ -31,9 +31,9 @@ MENUS = [
     #                 'label': 'CC - Heads Up Display',
     #                 'image': 'cc/hud.jpg',
     #                 'command': crjoin(
-    #                     'import bean.cc.hud',
-    #                     'reload(bean.cc.hud)',
-    #                     'bean.cc.hud.main()',
+    #                     'import moon.cc.hud',
+    #                     'reload(moon.cc.hud)',
+    #                     'moon.cc.hud.main()',
     #                 ),
     #             },
     #         },
@@ -42,9 +42,9 @@ MENUS = [
     #                 'label': 'CC - Playblast Manager',
     #                 'image': 'video-player.png',
     #                 'command': crjoin(
-    #                     'import bean.cc.playblast_manager',
-    #                     'reload(bean.cc.playblast_manager)',
-    #                     'bean.cc.playblast_manager.main()',
+    #                     'import moon.cc.playblast_manager',
+    #                     'reload(moon.cc.playblast_manager)',
+    #                     'moon.cc.playblast_manager.main()',
     #                 ),
     #             },
     #         },
@@ -53,9 +53,9 @@ MENUS = [
     #                 'label': 'CC - Asset Loader',
     #                 'image': 'cc/asset_loader.jpg',
     #                 'command': crjoin(
-    #                     'import bean.cc.asset_loader',
-    #                     'reload(bean.cc.asset_loader)',
-    #                     'bean.cc.asset_loader.main()',
+    #                     'import moon.cc.asset_loader',
+    #                     'reload(moon.cc.asset_loader)',
+    #                     'moon.cc.asset_loader.main()',
     #                 ),
     #             },
     #         },
@@ -64,9 +64,9 @@ MENUS = [
     #                 'label': 'CC - Camera Baking',
     #                 'image': 'cc/camera_baking.png',
     #                 'command': crjoin(
-    #                     'import bean.cc.cam_bake',
-    #                     'reload(bean.cc.cam_bake)',
-    #                     'bean.cc.cam_bake.bake()',
+    #                     'import moon.cc.cam_bake',
+    #                     'reload(moon.cc.cam_bake)',
+    #                     'moon.cc.cam_bake.bake()',
     #                 ),
     #             },
     #         },
@@ -86,9 +86,9 @@ MENUS = [
     #         'label': 'Camera View Manager',
     #         'image': 'camviewmgr.bmp',
     #         'command': crjoin(
-    #             'import bean.apps.camviewmgr',
-    #             'reload(bean.apps.camviewmgr)',
-    #             'bean.apps.camviewmgr.main()',
+    #             'import moon.apps.camviewmgr',
+    #             'reload(moon.apps.camviewmgr)',
+    #             'moon.apps.camviewmgr.main()',
     #         ),
     #     },
     # },
@@ -97,9 +97,9 @@ MENUS = [
     #         'label': 'Follow Cam',
     #         'image': 'follow_cam.bmp',
     #         'command': crjoin(
-    #             'import bean.apps.followcam',
-    #             'reload(bean.apps.followcam)',
-    #             'bean.apps.followcam.create()',
+    #             'import moon.apps.followcam',
+    #             'reload(moon.apps.followcam)',
+    #             'moon.apps.followcam.create()',
     #         ),
     #     },
     # },
@@ -108,9 +108,9 @@ MENUS = [
     #         'label': 'Imageplane Tools',
     #         'image': 'imageplane_tools.png',
     #         'command': crjoin(
-    #             'import bean.apps.imageplane_tools',
-    #             'reload(bean.apps.imageplane_tools)',
-    #             'bean.apps.imageplane_tools.window()',
+    #             'import moon.apps.imageplane_tools',
+    #             'reload(moon.apps.imageplane_tools)',
+    #             'moon.apps.imageplane_tools.window()',
     #         ),
     #     },
     # },
