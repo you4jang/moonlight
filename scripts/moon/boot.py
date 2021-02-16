@@ -5,7 +5,7 @@ import maya.cmds as cmds
 
 
 def init_paths():
-    from bean.join import pathjoin
+    from moon.join import pathjoin
 
     # 모든 패스에 대한 정보를 가지게 될 path 사전 정의
     path = {}
@@ -43,8 +43,8 @@ def init_paths():
     for p in additional_paths:
         sys.path.append(p)
 
-    import bean.context
-    bean.context.add('tools_root_path', path['home'])
+    import moon.context
+    moon.context.add('tools_root_path', path['home'])
 
 
 def customize_shelf_tab_layout():
@@ -52,16 +52,16 @@ def customize_shelf_tab_layout():
         return
 
     # 마야 메인 쉘프 레이아웃의 높이를 조절할 수 있는 모듈
-    import bean.menu.shelftab
-    bean.menu.shelftab.restore()
+    import moon.menu.shelftab
+    moon.menu.shelftab.restore()
 
 
 def customize_pulldown_menu():
     if cmds.about(batch=True):
         return
 
-    import bean.menu.pulldown
-    bean.menu.pulldown.create()
+    import moon.menu.pulldown
+    moon.menu.pulldown.create()
 
 
 def init_preferences():
