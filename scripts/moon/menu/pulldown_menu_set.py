@@ -10,22 +10,22 @@ MENUS = [
             'dividerLabel': 'Projects',
         },
     },
-    # {
-    #     'kwargs': {
-    #         'label': 'Project CC',
-    #     },
-    #     'sub_menus': [
-    #         {
-    #             'kwargs': {
-    #                 'label': 'CC - Animation Scene Manager',
-    #                 'image': 'cc/animation_scene_manager.jpg',
-    #                 'command': crjoin(
-    #                     'import moon.cc.animation_scene_manager',
-    #                     'reload(moon.cc.animation_scene_manager)',
-    #                     'moon.cc.animation_scene_manager.main()',
-    #                 ),
-    #             },
-    #         },
+    {
+        'kwargs': {
+            'label': 'Kong7',
+        },
+        'sub_menus': [
+            {
+                'kwargs': {
+                    'label': 'Kong7 - EDL Editor',
+                    'image': 'kong7/edl_editor.png',
+                    'command': crjoin(
+                        'import prj.kong7.edl_editor',
+                        'reload(prj.kong7.edl_editor)',
+                        'prj.kong7.edl_editor.main()',
+                    ),
+                },
+            },
     #         {
     #             'kwargs': {
     #                 'label': 'CC - Heads Up Display',
@@ -70,8 +70,8 @@ MENUS = [
     #                 ),
     #             },
     #         },
-    #     ],
-    # },
+        ],
+    },
     ####################################################################################################
     # 카메라
     ####################################################################################################
