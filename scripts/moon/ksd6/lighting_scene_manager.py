@@ -651,6 +651,7 @@ class LightingSceneManagerWindow(MainWindow):
         self.show_latest_search_time(elapsed_time=time.time() - start_time)
 
         self.work_list.setEnabled(True)
+        self.work_list.resizeRowsToContents()
 
     def init_filters(self):
         log.debug('init_filters()')
