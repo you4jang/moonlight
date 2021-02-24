@@ -17,7 +17,7 @@ for drive in ['c:', 'd:']:
 # 네트워크 드라이브 정의
 ####################################################################################################
 # 인하우스툴
-INHOUSETOOLS_DRIVE = 'x:'
+INHOUSETOOLS_DRIVE = 'z:'
 if DEV_PATH:
     INHOUSETOOLS_DRIVE = DEV_PATH
 

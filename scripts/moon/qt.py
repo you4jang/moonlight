@@ -4,12 +4,12 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 from PySide2 import __version__
 from shiboken2 import wrapInstance
-from bean.join import pathjoin, crjoin
-from bean.config import INHOUSETOOLS_ICON_PATH
+from moon.join import pathjoin, crjoin
+from moon.config import INHOUSETOOLS_ICON_PATH
 import maya.OpenMayaUI
 import maya.cmds as cmds
 import pymel.core as pm
-import bean.scriptjob
+import moon.scriptjob
 
 
 if not pm.about(batch=True):
@@ -365,7 +365,7 @@ if not pm.about(batch=True):
 
     class Button(QPushButton):
 
-        def __init__(self, label=None, parent=None, korean=False, height=25):
+        def __init__(self, label=None, parent=None, korean=True, height=25):
             super(Button, self).__init__(label, parent)
             if korean:
                 self.setFont(MAIN_FONT)
@@ -404,7 +404,7 @@ if not pm.about(batch=True):
             self.win = window_name
             self.setObjectName(self.win)
             self.setFont(MAIN_FONT)
-            self.setWindowIcon(QIcon(QPixmap(img_path('bean_ci_icon.png'))))
+            self.setWindowIcon(QIcon(QPixmap(img_path('moon_title_icon.png'))))
 
         def moveEvent(self, *args, **kwargs):
             store_window(self)
@@ -413,8 +413,8 @@ if not pm.about(batch=True):
             store_window(self)
 
         def closeEvent(self, *args, **kwargs):
-            bean.scriptjob.remove_script_job(__name__)
-            bean.scriptjob.remove_script_job(self.__class__.__name__)
+            moon.scriptjob.remove_script_job(__name__)
+            moon.scriptjob.remove_script_job(self.__class__.__name__)
 
         def setFixedSize(self, *args, **kwargs):
             super(MainDialog, self).setFixedSize(*_set_sizes(self, *args), **kwargs)
@@ -430,7 +430,7 @@ if not pm.about(batch=True):
         def __init__(self, parent=maya_widget()):
             super(MainWindow, self).__init__(parent)
             self.setFont(MAIN_FONT)
-            self.setWindowIcon(QIcon(QPixmap(img_path('bean_ci_icon.png'))))
+            self.setWindowIcon(QIcon(QPixmap(img_path('moon_title_icon.png'))))
 
         def moveEvent(self, *args, **kwargs):
             store_window(self)
@@ -526,7 +526,7 @@ if not pm.about(batch=True):
 
     class Combobox(QComboBox):
 
-        def __init__(self, korean=False, *args, **kwargs):
+        def __init__(self, korean=True, *args, **kwargs):
             super(Combobox, self).__init__(*args, **kwargs)
             self.setCursor(Qt.PointingHandCursor)
             if korean:
@@ -608,7 +608,7 @@ if not pm.about(batch=True):
 
     class Label(QLabel):
 
-        def __init__(self, text=None, korean=False, *args, **kwargs):
+        def __init__(self, text=None, korean=True, *args, **kwargs):
             super(Label, self).__init__(*args, **kwargs)
             if text:
                 self.setText(text)
@@ -650,7 +650,7 @@ if not pm.about(batch=True):
 
     class ProgressBar(MainDialog):
 
-        def __init__(self, maximum=100, title=None, width=500, korean=False, parent=maya_widget(),
+        def __init__(self, maximum=100, title=None, width=500, korean=True, parent=maya_widget(),
                      visible=True):
             super(ProgressBar, self).__init__(parent)
             self.invisible = not visible
@@ -903,7 +903,7 @@ if not pm.about(batch=True):
     ####################################################################################################
     class Message(object):
 
-        def __init__(self, title=None, messages=None, korean=False):
+        def __init__(self, title=None, messages=None, korean=True):
             self.message_list = []
             # 영문 최적화인지 한글 최적화인지 여부
             self.korean = korean
@@ -928,7 +928,7 @@ if not pm.about(batch=True):
             self.message_list.append(nice(msg, fontsize=20, fontfamily=self.title_font, bold=True))
             return self
 
-        def add(self, msg, indent=0, bold=False, korean=False, ordered=False, unordered=False):
+        def add(self, msg, indent=0, bold=False, korean=True, ordered=False, unordered=False):
             if all([ordered, unordered]):
                 raise AttributeError(u"The flags both ordered and unordered can't use simultaneously.")
                 return
@@ -955,7 +955,7 @@ if not pm.about(batch=True):
     # 대화상자, 프롬프트, 다이얼로그 관련 함수
     ####################################################################################################
     def questionbox(parent=None, title=None, message=None, icon=None, align=None,
-                    button=None, default=None, cancel=None, dismiss=None, korean=False, width=400):
+                    button=None, default=None, cancel=None, dismiss=None, korean=True, width=400):
         """
         메시지 상자를 만들어주는 함수
 
@@ -1064,7 +1064,7 @@ if not pm.about(batch=True):
 
         return buttons[msgbox.clickedButton()]
 
-    def infobox(message, parent=None, korean=False):
+    def infobox(message, parent=None, korean=True):
         """
         정보를 제공해주는 일반적인 메시지박스
 
@@ -1085,7 +1085,7 @@ if not pm.about(batch=True):
             korean=korean,
         )
 
-    def warnbox(message, parent=None, korean=False):
+    def warnbox(message, parent=None, korean=True):
         """
         경고를 알려주는 메시지박스
 
@@ -1106,7 +1106,7 @@ if not pm.about(batch=True):
             korean=korean,
         )
 
-    def errorbox(message, parent=None, korean=False):
+    def errorbox(message, parent=None, korean=True):
         """
         치명적인 에러를 알려주는 메시지박스
 

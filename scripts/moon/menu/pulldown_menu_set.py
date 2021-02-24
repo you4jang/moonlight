@@ -4,28 +4,51 @@ from moon.join import crjoin
 
 
 MENUS = [
+    ####################################################################################################
+    # 필수 앱
+    ####################################################################################################
+    {
+        'kwargs': {
+            'divider': True,
+            'dividerLabel': 'Main',
+        },
+    },
+    {
+        'kwargs': {
+            'label': 'moon Login',
+            'image': 'login.jpg',
+            'command': crjoin(
+                'import moon.authentication',
+                'reload(moon.authentication)',
+                'moon.authentication.show_window()',
+            ),
+        },
+    },
+    ####################################################################################################
+    # 프로젝트
+    ####################################################################################################
     {
         'kwargs': {
             'divider': True,
             'dividerLabel': 'Projects',
         },
     },
-    # {
-    #     'kwargs': {
-    #         'label': 'Project CC',
-    #     },
-    #     'sub_menus': [
-    #         {
-    #             'kwargs': {
-    #                 'label': 'CC - Animation Scene Manager',
-    #                 'image': 'cc/animation_scene_manager.jpg',
-    #                 'command': crjoin(
-    #                     'import moon.cc.animation_scene_manager',
-    #                     'reload(moon.cc.animation_scene_manager)',
-    #                     'moon.cc.animation_scene_manager.main()',
-    #                 ),
-    #             },
-    #         },
+    {
+        'kwargs': {
+            'label': 'ksd6',
+        },
+        'sub_menus': [
+            {
+                'kwargs': {
+                    'label': 'ksd6 - Lighting Scene Manager',
+                    'image': 'ksd6/lighting_scene_manager.png',
+                    'command': crjoin(
+                        'import moon.ksd6.lighting_scene_manager',
+                        'reload(moon.ksd6.lighting_scene_manager)',
+                        'moon.ksd6.lighting_scene_manager.main()',
+                    ),
+                },
+            },
     #         {
     #             'kwargs': {
     #                 'label': 'CC - Heads Up Display',
@@ -70,8 +93,8 @@ MENUS = [
     #                 ),
     #             },
     #         },
-    #     ],
-    # },
+        ],
+    },
     ####################################################################################################
     # 카메라
     ####################################################################################################
