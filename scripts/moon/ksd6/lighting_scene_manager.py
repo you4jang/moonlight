@@ -137,7 +137,7 @@ class WorkList(QTableWidget):
 
     def ui(self):
         self.header_labels = ['Shot', 'Start', 'End', 'Ani\nStatus', 'Lighting\nStatus', 'Updated At']
-        self.column_widths = [100, 60, 60, 120, 120, 150]
+        self.column_widths = [100, 60, 60, 100, 120, 150]
 
         self.field_width_data_optionvar = self.parent.objectName() + '_header_width_optionvar'
 
@@ -365,12 +365,12 @@ class LightingSceneManagerWindow(MainWindow):
 
         self.episode_filter_combo = FilterCombobox(self.init_episode_filter)
         self.episode_filter_combo.setView(QListView())
-        self.episode_filter_combo.setFixedSize(100, 30)
+        self.episode_filter_combo.setFixedSize(100, 25)
         self.episode_filter_combo.currentIndexChanged.connect(self.on_episode_changed)
 
         self.status_filter_combo = FilterCombobox(self.init_status_filter)
         self.status_filter_combo.setView(QListView())
-        self.status_filter_combo.setFixedSize(150, 30)
+        self.status_filter_combo.setFixedSize(150, 25)
         self.status_filter_combo.currentIndexChanged.connect(partial(self.on_combobox_changed, self.status_filter_combo))
 
         ####################################################################################################
@@ -380,7 +380,7 @@ class LightingSceneManagerWindow(MainWindow):
         self.search_btn.setIcon(QIcon(img_path('magnifying-glass.png')))
         self.search_btn.setIconSize(QSize(12, 12))
         self.search_btn.setFixedWidth(120)
-        self.search_btn.setFixedHeight(31)
+        self.search_btn.setFixedHeight(25)
         self.search_btn.setStyleSheet(stylesheet({
             'QPushButton': [
                 'border-radius: 3px',
@@ -394,7 +394,7 @@ class LightingSceneManagerWindow(MainWindow):
         self.search_btn.clicked.connect(self.search_tasks)
 
         # 현재 열려있는 작업 검색 버튼
-        open_work_btn = IconButton('target.png', 30, 17)
+        open_work_btn = IconButton('target.png', 25, 17)
         open_work_btn.setToolTip('현재 열려있는 씬 파일을 찾아줍니다.')
         open_work_btn.clicked.connect(self.init_current_scene)
 
@@ -405,13 +405,13 @@ class LightingSceneManagerWindow(MainWindow):
         self.login_name = Label('')
 
         self.filter_layout.addWidget(self.clear_width_btn)
-        self.filter_layout.addItem(QSpacerItem(20, 0))
+        self.filter_layout.addItem(QSpacerItem(5, 0))
         self.filter_layout.addWidget(self.episode_filter_combo)
         self.filter_layout.addWidget(self.status_filter_combo)
-        self.filter_layout.addItem(QSpacerItem(20, 0))
+        self.filter_layout.addItem(QSpacerItem(5, 0))
         self.filter_layout.addWidget(self.search_btn)
         self.filter_layout.addWidget(open_work_btn)
-        self.filter_layout.addItem(QSpacerItem(20, 0, QSizePolicy.Expanding, QSizePolicy.Fixed))
+        self.filter_layout.addItem(QSpacerItem(5, 0, QSizePolicy.Expanding, QSizePolicy.Fixed))
 
         ####################################################################################################
         # 작업리스트
