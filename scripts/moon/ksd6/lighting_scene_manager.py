@@ -63,6 +63,16 @@ class FilterCombobox(Combobox):
             self.init_script()
 
 
+class TitleLabel(Label):
+
+    def __init__(self, txt, parent=None):
+        super(TitleLabel, self).__init__(parent)
+        self.setText(txt)
+        self.setFixedHeight(20)
+        self.setAlignment(Qt.AlignCenter)
+        self.setStyleSheet('color:#eee;background-color:#333')
+
+
 ####################################################################################################
 # 스테이터스 클래스
 ####################################################################################################
@@ -340,19 +350,62 @@ class LightingSceneManagerWindow(MainWindow):
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
 
-        self.window_layout = QVBoxLayout(self.central_widget)
-        self.window_layout.setContentsMargins(0, 0, 0, 0)
-        self.window_layout.setSpacing(0)
+        self.window_layout = QHBoxLayout(self.central_widget)
+        # self.window_layout.setContentsMargins(9, 9, 9, 9)
+        # self.window_layout.setSpacing(0)
         self.window_layout.setAlignment(Qt.AlignTop)
 
-        # 메인 레이아웃
-        self.main_layout = QVBoxLayout()
-        self.main_layout.setContentsMargins(15, 15, 15, 15)
-        self.main_layout.setAlignment(Qt.AlignTop)
+        ####################################################################################################
+        # 좌측 레이아웃
+        ####################################################################################################
+        self.left_layout = QVBoxLayout()
+        self.left_layout.setAlignment(Qt.AlignTop)
+        self.left_layout.setSpacing(1)
+
+        self.sg_open_btn = Button('샷건 페이지')
+        self.sg_open_btn.setIcon(QIcon(img_path('sg_logo.png')))
+
+        folder_label = TitleLabel('폴더')
+        self.an_folder_btn = Button('애니 폴더')
+        self.an_folder_btn.setIcon(QIcon(img_path('open.png')))
+
+        self.lt_folder_btn = Button('라이팅 폴더')
+        self.lt_folder_btn.setIcon(QIcon(img_path('open.png')))
+
+        open_label = TitleLabel('작업')
+        self.open_btn1 = Button('씬 열기 (확인용)')
+        self.open_btn2 = Button('씬 열기 (작업용)')
+
+        status_label = TitleLabel('상태변경')
+        self.status_wtg_btn = Button('Waiting to Start', korean=False)
+        self.status_ip_btn = Button('In Progress', korean=False)
+        self.status_fin_btn = Button('Final', korean=False)
+        self.status_rrq_btn = Button('Revision Requested', korean=False)
+
+        self.left_layout.addItem(QSpacerItem(0, 37))
+        self.left_layout.addWidget(self.sg_open_btn)
+        self.left_layout.addItem(QSpacerItem(0, 15))
+        self.left_layout.addWidget(folder_label)
+        self.left_layout.addWidget(self.an_folder_btn)
+        self.left_layout.addWidget(self.lt_folder_btn)
+        self.left_layout.addItem(QSpacerItem(0, 15))
+        self.left_layout.addWidget(open_label)
+        self.left_layout.addWidget(self.open_btn1)
+        self.left_layout.addWidget(self.open_btn2)
+        self.left_layout.addItem(QSpacerItem(0, 15))
+        self.left_layout.addWidget(status_label)
+        self.left_layout.addWidget(self.status_wtg_btn)
+        self.left_layout.addWidget(self.status_ip_btn)
+        self.left_layout.addWidget(self.status_fin_btn)
+        self.left_layout.addWidget(self.status_rrq_btn)
 
         ####################################################################################################
-        # 작업 검색 그룹박스
+        # 메인 레이아웃
         ####################################################################################################
+        self.main_layout = QVBoxLayout()
+        # self.main_layout.setContentsMargins(15, 15, 15, 15)
+        self.main_layout.setAlignment(Qt.AlignTop)
+
         # 줄 간격 초기화 버튼
         self.clear_width_btn = IconButton('width.png', 25, 17)
         self.clear_width_btn.setToolTip('Reset width on headers.')
@@ -373,9 +426,7 @@ class LightingSceneManagerWindow(MainWindow):
         self.status_filter_combo.setFixedSize(150, 25)
         self.status_filter_combo.currentIndexChanged.connect(partial(self.on_combobox_changed, self.status_filter_combo))
 
-        ####################################################################################################
         # 검색버튼
-        ####################################################################################################
         self.search_btn = Button('검색')
         self.search_btn.setIcon(QIcon(img_path('magnifying-glass.png')))
         self.search_btn.setIconSize(QSize(12, 12))
@@ -393,16 +444,16 @@ class LightingSceneManagerWindow(MainWindow):
         }))
         self.search_btn.clicked.connect(self.search_tasks)
 
+        # 키워드 검색
+        self.keyworkd_field = LineEdit()
+        self.keyworkd_field.setMinimumWidth(100)
+        self.keyworkd_field.setFixedHeight(25)
+        self.keyworkd_field.returnPressed.connect(self.search_from_keyword)
+
         # 현재 열려있는 작업 검색 버튼
-        open_work_btn = IconButton('target.png', 25, 17)
+        open_work_btn = IconButton('target.png', 25, 13)
         open_work_btn.setToolTip('현재 열려있는 씬 파일을 찾아줍니다.')
         open_work_btn.clicked.connect(self.init_current_scene)
-
-        self.login_picture = QLabel()
-        self.login_picture.setFixedSize(25, 25)
-        self.login_picture.setScaledContents(True)
-
-        self.login_name = Label('')
 
         self.filter_layout.addWidget(self.clear_width_btn)
         self.filter_layout.addItem(QSpacerItem(5, 0))
@@ -411,11 +462,10 @@ class LightingSceneManagerWindow(MainWindow):
         self.filter_layout.addItem(QSpacerItem(5, 0))
         self.filter_layout.addWidget(self.search_btn)
         self.filter_layout.addWidget(open_work_btn)
+        self.filter_layout.addWidget(self.keyworkd_field)
         self.filter_layout.addItem(QSpacerItem(5, 0, QSizePolicy.Expanding, QSizePolicy.Fixed))
 
-        ####################################################################################################
         # 작업리스트
-        ####################################################################################################
         self.work_list_grp = QWidget()
         self.work_list_layout = QVBoxLayout(self.work_list_grp)
         self.work_list_layout.setContentsMargins(0, 0, 0, 0)
@@ -443,14 +493,15 @@ class LightingSceneManagerWindow(MainWindow):
         # 레이아웃 배치
         ####################################################################################################
         self.main_layout.addLayout(self.filter_layout)
-        self.main_layout.addItem(QSpacerItem(0, 12))
+        # self.main_layout.addItem(QSpacerItem(0, 12))
         self.main_layout.addWidget(self.work_list_grp)
 
+        self.window_layout.addLayout(self.left_layout)
         self.window_layout.addLayout(self.main_layout)
 
         restore_window(self)
 
-        self.setMinimumHeight(500)
+        self.setMinimumSize(800, 700)
 
     def open_sg_shot_page(self, sg_task):
         sg = self.get_sg_connection('admin_apid')
@@ -487,6 +538,15 @@ class LightingSceneManagerWindow(MainWindow):
         self.status_filter_combo.addItem(self.FILTER_NAME_STATUS)
         for status in Status.get_list():
             self.status_filter_combo.addItem(status)
+
+    def search_from_keyword(self):
+        k = self.keyworkd_field.text()
+        self.keyworkd_field.clear()
+        if 5 > len(k) > 6:
+            return
+        print(k[:2], k[2:])
+        shot_name = 'EP{}_C{}'.format(k[:2], k[2:])
+        self.search_tasks(shot=shot_name)
 
     def search_tasks(self, shot=None, filtered_task_list=None, clear=False):
         log.debug('search_tasks(shot={}, filtered_task_list={}, clear={})'.format(shot, filtered_task_list, clear))
