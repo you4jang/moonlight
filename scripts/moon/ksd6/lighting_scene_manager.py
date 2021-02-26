@@ -922,7 +922,7 @@ class LightingSceneManagerWindow(MainWindow):
                 lt_set_path = pathjoin(config.SV_LIGHT_SET_PATH, bg_set)
                 lt_set_file = pathjoin(lt_set_path, namejoin(bg_set, lt_set) + '.ma')
                 log.debug('lt_set_file : {}'.format(lt_set_file))
-                cmds.file(lt_set_file, force=True, open=True, ignoreVersion=True, promprt=False)
+                cmds.file(lt_set_file, force=True, open=True, ignoreVersion=True, prompt=False)
                 cmds.file(rename=sv_scn_file)
                 cmds.file(
                     sv_ani_file,
