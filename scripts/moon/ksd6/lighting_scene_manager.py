@@ -890,7 +890,20 @@ class LightingSceneManagerWindow(MainWindow):
             )
         else:
             if os.path.isfile(sv_ani_file):
-                cmds.file(force=True, new=True)
+                sg = self.get_sg_connection('admin_api')
+                filters = [
+                    ['id', 'is', sg_task['entity']['id']],
+                ]
+                fields = ['sg_light_set']
+                sg_shot = sg.find('Shot', filters, fields)
+                if not sg_shot:
+                    errorbox('샷건에 Shot이 없습니다.')
+                    return
+                lt_set = sg_shot['sg_light_set']
+                buf = lt_set.split('_')
+                lt_set_path = pathjoin(config.SV_LIGHT_SET_PATH, namejoin(*buf[:-1]))
+                lt_set_file = pathjoin(lt_set_path, lt_set + '.ma')
+                cmds.file(lt_set_file, force=True, open=True, ignoreVersion=True, promprt=False)
                 cmds.file(rename=sv_scn_file)
                 cmds.file(
                     sv_ani_file,
