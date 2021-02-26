@@ -427,7 +427,7 @@ class LightingSceneManagerWindow(MainWindow):
 
         # 키워드 검색
         self.keyworkd_field = LineEdit()
-        self.keyworkd_field.setMinimumWidth(100)
+        self.keyworkd_field.setFixedWidth(100)
         self.keyworkd_field.setFixedHeight(25)
         self.keyworkd_field.returnPressed.connect(self.search_from_keyword)
 
