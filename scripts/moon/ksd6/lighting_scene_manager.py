@@ -350,12 +350,16 @@ class LightingSceneManagerWindow(MainWindow):
 
         status_label = TitleLabel('상태변경')
         self.status_wtg_btn = FunctionButton('Waiting to Start', korean=False)
+        self.status_wtg_btn.clicked.connect(partial(self.set_status, 'wtg'))
         self.function_button_list.append(self.status_wtg_btn)
         self.status_ip_btn = FunctionButton('In Progress', korean=False)
+        self.status_ip_btn.clicked.connect(partial(self.set_status, 'ip'))
         self.function_button_list.append(self.status_ip_btn)
         self.status_fin_btn = FunctionButton('Final', korean=False)
+        self.status_fin_btn.clicked.connect(partial(self.set_status, 'fin'))
         self.function_button_list.append(self.status_fin_btn)
         self.status_rrq_btn = FunctionButton('Revision Requested', korean=False)
+        self.status_rrq_btn.clicked.connect(partial(self.set_status, 'rrq'))
         self.function_button_list.append(self.status_rrq_btn)
 
         self.left_layout.addItem(QSpacerItem(0, 37))
@@ -821,13 +825,12 @@ class LightingSceneManagerWindow(MainWindow):
         ]
         self.work_count.setText(' : '.join(msg))
 
-    def set_sg_status(self, sg_tasks, code):
+    def set_status(self, code):
+        sg_tasks = self.work_list.get_selected_multi_sg_task()
         sg = self.get_sg_connection('admin_api')
-
         for sg_task in sg_tasks:
             data = {'sg_status_list': code}
             sg.update('Task', sg_task['id'], data)
-
         self.reload_ui()
 
     def show_latest_search_time(self, elapsed_time=None):
