@@ -277,7 +277,6 @@ class MoonLoggedWindow(MainDialog):
     def __init__(self):
         super(MoonLoggedWindow, self).__init__(self.win, parent=maya_widget())
         self.setObjectName(self.win)
-        self.setWindowTitle('문 로그인')
 
         # 메인 윈도우의 레이아웃 설정
         self.window_layout = QVBoxLayout(self)
