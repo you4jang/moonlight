@@ -790,18 +790,18 @@ class LightingSceneManagerWindow(MainWindow):
         return dirs(pathjoin(config.SV_LGT_PATH, ep))
 
     @staticmethod
-    def get_episode_from_sg_task(shot_name):
+    def get_episode_from_shot(shot_name):
         buf = shot_name.split('_')
         return buf[0]
 
     @staticmethod
-    def get_cut_from_sg_task(shot_name):
+    def get_cut_from_shot(shot_name):
         buf = shot_name.split('_')
         return buf[1]
 
     def get_server_ani_path(self, shot_name):
-        ep = self.get_episode_from_sg_task(shot_name)
-        cut = self.get_cut_from_sg_task(shot_name)
+        ep = self.get_episode_from_shot(shot_name)
+        cut = self.get_cut_from_shot(shot_name)
         return pathjoin(config.SV_ANI_PATH, ep, cut, 'fdb')
 
     def get_server_ani_file(self, shot_name):

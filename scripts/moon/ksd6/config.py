@@ -16,6 +16,7 @@ SG_STEP_LIGHTING = {'type': 'Step', 'id': 7}
 # 파일 경로 관련
 ####################################################################################################
 SV_PRJ_PATH = pathjoin('K:', 'KongsuniDance6')
+SV_LIGHT_SET_PATH = pathjoin('K:', 'lightset')
 SV_THUMBNAIL_PATH = pathjoin(SV_PRJ_PATH, 'thumbnails')
 SV_ANI_PATH = pathjoin(SV_PRJ_PATH, '03_Animation', '02_Scenes')
 SV_LGT_PATH = pathjoin(SV_PRJ_PATH, '04_LRComp', '01_Lighting')
