@@ -957,7 +957,8 @@ class LightingSceneManagerWindow(MainWindow):
 
         # 작업경로를 맞춰준다.
         ep = self.get_episode_from_shot(shot_name)
-        sv_prj_path = pathjoin(config.SV_REN_PATH, ep)
+        cut = self.get_cut_from_shot(shot_name)
+        sv_prj_path = dirs(pathjoin(config.SV_REN_PATH, ep, cut))
         log.debug('sv_prj_path : {}'.format(sv_prj_path))
         pm.workspace(sv_prj_path, openWorkspace=True)
 
