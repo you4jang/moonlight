@@ -309,10 +309,21 @@ class LightingSceneManagerWindow(MainWindow):
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
 
-        self.window_layout = QHBoxLayout(self.central_widget)
-        # self.window_layout.setContentsMargins(9, 9, 9, 9)
-        # self.window_layout.setSpacing(0)
+        self.window_layout = QVBoxLayout(self.central_widget)
+        self.window_layout.setContentsMargins(0, 0, 0, 0)
+        self.window_layout.setSpacing(0)
         self.window_layout.setAlignment(Qt.AlignTop)
+
+        self.banner = QLabel()
+        self.banner.setPixmap(QPixmap(img_path('ksd6/banner.png')))
+        self.banner.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
+
+        self.window_layout.addWidget(self.banner)
+        self.window_layout.addWidget(hline())
+
+        self.center_layout = QHBoxLayout()
+        self.center_layout.setContentsMargins(9, 9, 9, 9)
+        self.center_layout.setSpacing(6)
 
         ####################################################################################################
         # 좌측 레이아웃
@@ -362,7 +373,7 @@ class LightingSceneManagerWindow(MainWindow):
         self.status_rrq_btn.clicked.connect(partial(self.set_status, 'rrq'))
         self.function_button_list.append(self.status_rrq_btn)
 
-        self.left_layout.addItem(QSpacerItem(0, 37))
+        self.left_layout.addItem(QSpacerItem(0, 33))
         self.left_layout.addWidget(self.sg_open_btn)
         self.left_layout.addItem(QSpacerItem(0, 15))
         self.left_layout.addWidget(folder_label)
@@ -384,7 +395,7 @@ class LightingSceneManagerWindow(MainWindow):
         # 메인 레이아웃
         ####################################################################################################
         self.main_layout = QVBoxLayout()
-        # self.main_layout.setContentsMargins(15, 15, 15, 15)
+        self.main_layout.setSpacing(6)
         self.main_layout.setAlignment(Qt.AlignTop)
 
         # 줄 간격 초기화 버튼
@@ -475,11 +486,12 @@ class LightingSceneManagerWindow(MainWindow):
         # 레이아웃 배치
         ####################################################################################################
         self.main_layout.addLayout(self.filter_layout)
-        # self.main_layout.addItem(QSpacerItem(0, 12))
         self.main_layout.addWidget(self.work_list_grp)
 
-        self.window_layout.addLayout(self.left_layout)
-        self.window_layout.addLayout(self.main_layout)
+        self.center_layout.addLayout(self.left_layout)
+        self.center_layout.addLayout(self.main_layout)
+
+        self.window_layout.addLayout(self.center_layout)
 
         restore_window(self)
 
@@ -909,6 +921,7 @@ class LightingSceneManagerWindow(MainWindow):
                     return
                 lt_set_path = pathjoin(config.SV_LIGHT_SET_PATH, bg_set)
                 lt_set_file = pathjoin(lt_set_path, namejoin(bg_set, lt_set) + '.ma')
+                log.debug('lt_set_file : {}'.format(lt_set_file))
                 cmds.file(lt_set_file, force=True, open=True, ignoreVersion=True, promprt=False)
                 cmds.file(rename=sv_scn_file)
                 cmds.file(
