@@ -956,9 +956,13 @@ class LightingSceneManagerWindow(MainWindow):
         moon.clean.reset_display_smoothness()
 
         # 작업경로를 맞춰준다.
-        sv_scn_path = self.get_server_path(sg_task['entity']['name'])
+        ep = self.get_episode_from_shot(shot_name)
+        sv_prj_path = pathjoin(config.SV_REN_PATH, ep)
+        log.debug('sv_prj_path : {}'.format(sv_prj_path))
+        pm.workspace(sv_prj_path, openWorkspace=True)
+
+        sv_scn_path = self.get_server_path(shot_name)
         set_retaining_path(sv_scn_path)
-        set_workspace(sv_scn_path)
 
         # 최근 파일에 등록한다.
         add_recent_file(sv_scn_file)

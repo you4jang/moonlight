@@ -30,7 +30,7 @@ def add_recent_file(filename):
 
 
 def set_workspace(path):
-    cmds.workspace(directory=path)
+    cmds.workspace(path, openWorkspace=True)
 
 
 def save_changes(parent=None):
