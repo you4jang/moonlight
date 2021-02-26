@@ -895,11 +895,11 @@ class LightingSceneManagerWindow(MainWindow):
                     ['id', 'is', sg_task['entity']['id']],
                 ]
                 fields = ['sg_bg', 'sg_light_set']
-                sg_shot = sg.find('Shot', filters, fields)
+                sg_shot = sg.find_one('Shot', filters, fields)
                 if not sg_shot:
                     errorbox('샷건에 Shot이 없습니다.', parent=self)
                     return
-                bg_set = sg_shot['sg_bg']
+                bg_set = sg_shot['sg_bg'][0]['name']
                 if not bg_set:
                     errorbox('샷건에서 BG 어셋이 지정되어있지 않습니다.', parent=self)
                     return
