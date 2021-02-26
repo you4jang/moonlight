@@ -85,7 +85,6 @@ class MoonLoginWindow(MainDialog):
 
     def ui(self):
         self.setObjectName(self.win)
-        self.setWindowTitle('문 로그인')
 
         self.window_layout = QVBoxLayout(self)
         self.window_layout.setContentsMargins(5, 5, 5, 5)
@@ -104,7 +103,7 @@ class MoonLoginWindow(MainDialog):
         self.main_layout.setAlignment(Qt.AlignTop)
 
         # 타이틀
-        self.title = Label('문 로그인')
+        self.title = Label('로그인')
         self.title.setAlignment(Qt.AlignCenter)
         self.title.setFont(TITLE_FONT)
 
