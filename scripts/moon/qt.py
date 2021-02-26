@@ -12,6 +12,9 @@ import pymel.core as pm
 import moon.scriptjob
 
 
+WINDOW_TITLE = 'Moonlight'
+
+
 if not pm.about(batch=True):
 
     def ss_size(val, qwidget=None):
@@ -404,6 +407,7 @@ if not pm.about(batch=True):
             self.win = window_name
             self.setObjectName(self.win)
             self.setFont(MAIN_FONT)
+            self.setWindowTitle(WINDOW_TITLE)
             self.setWindowIcon(QIcon(QPixmap(img_path('moon_title_icon.png'))))
 
         def moveEvent(self, *args, **kwargs):
