@@ -73,6 +73,19 @@ class TitleLabel(Label):
         self.setStyleSheet('color:#eee;background-color:#333')
 
 
+class FunctionButton(Button):
+
+    def __init__(self, *args, **kwargs):
+        super(FunctionButton, self).__init__(*args, **kwargs)
+        self.setEnabled(False)
+
+    def enable(self):
+        self.setEnabled(True)
+
+    def disable(self):
+        self.setEnabled(False)
+
+
 ####################################################################################################
 # 스테이터스 클래스
 ####################################################################################################
@@ -146,8 +159,8 @@ class WorkList(QTableWidget):
         self.ui()
 
     def ui(self):
-        self.header_labels = ['Shot', 'Start', 'End', 'Ani\nStatus', 'Lighting\nStatus', 'Updated At']
-        self.column_widths = [100, 60, 60, 100, 120, 150]
+        self.header_labels = ['Shot', 'Start', 'End', 'Ani\nFile', 'Ani\nStatus', 'Lighting\nStatus', 'Updated At']
+        self.column_widths = [100, 60, 60, 60, 100, 120, 150]
 
         self.field_width_data_optionvar = self.parent.objectName() + '_header_width_optionvar'
 
@@ -163,6 +176,7 @@ class WorkList(QTableWidget):
         self.doubleClicked.connect(self.open_work_with_dialog)
 
         self.header = self.horizontalHeader()
+        # self.header.setStretchLastSection(True)
         self.header.sectionResized.connect(self.on_header_resized)
 
         self.init_header()
@@ -201,79 +215,27 @@ class WorkList(QTableWidget):
         # 아무런 아이템도 선택되지 않으면 컨텍스트 메뉴가 보이지 않는다.
         if not self.selectedIndexes():
             return
+        if self.is_multi_selected():
+            return
         # 사용자의 입력을 받아 원하는 기능을 수행하고 콜백을 보내준다.
         self._execute(self._execute_single_job_as_func, partial(self.parent.open_work))
-
-    def contextMenuEvent(self, e, *args, **kwargs):
-        super(WorkList, self).contextMenuEvent(e, *args, **kwargs)
-
-        # 아무런 아이템도 선택되지 않으면 컨텍스트 메뉴가 보이지 않는다.
-        if not self.selectedIndexes():
-            return
-
-        # 로그인 사용자의 정보가 필요하기 때문에 로그인 쿠키를 준비한다.
-        self.login_sg_user = MoonLoginCookie.get_login_user().sg_user
-
-        ####################################################################################################
-        # 컨텍스트 메뉴 생성
-        ####################################################################################################
-        menu = QMenu(self)
-        menu.setFont(MAIN_FONT)
-
-        if self.is_single_selected():
-            var = menu.addAction(QIcon(img_path('sg_logo.png')), '샷건 페이지 열기')
-            var.function = self._execute_single_job_as_func
-            var.callback = self.parent.open_sg_shot_page
-
-            menu.addSeparator()
-
-            var = menu.addAction('씬 파일 열기 (확인용)')
-            var.function = self._execute_single_job_as_func
-            var.callback = partial(self.parent.open_work)
-
-            var = menu.addAction(QIcon(img_path('maya.png')), '씬 파일 열기 (작업용) >>> Doing')
-            var.function = self._execute_single_job_as_func
-            var.callback = partial(self.parent.open_work, status='doing')
-
-            var = menu.addAction(QIcon(img_path('open.png')), '서버 폴더 열기')
-            var.function = self._execute_single_job_as_func
-            var.callback = self.parent.open_server_path
-
-        if self.is_single_selected():
-            menu.addSeparator()
-
-            var = menu.addAction(QIcon(img_path('circle_check.png')), '상태변경 >>> In Progress')
-            var.function = self._execute_multi_job_as_func
-            var.callback = partial(self.parent.set_sg_status, 'doing')
-
-            var = menu.addAction(QIcon(img_path('circle_check.png')), '상태변경 >>> Final')
-            var.function = self._execute_multi_job_as_func
-            var.callback = partial(self.parent.set_sg_status, 'fin')
-
-            menu.addSeparator()
-
-            if self.is_single_selected():
-                menu.addSeparator()
-                var = menu.addAction('[개발자] 디버그')
-                var.function = self._execute_single_job_as_func
-                var.callback = self.parent.determine_work
-
-        # 사용자의 입력을 받아 원하는 기능을 수행하고 콜백을 보내준다.
-        action = menu.exec_(self.mapToGlobal(e.pos()))
-        if action:
-            if hasattr(action, 'function'):
-                self._execute(executer=action.function, callback=action.callback)
 
     def is_single_selected(self):
         return len(self.get_selected_indexes()) == 1
 
     def is_multi_selected(self):
-        return not self.is_single_selected()
+        return len(self.get_selected_indexes()) > 1
 
-    def _get_selected_one(self):
+    def get_selected_single_sg_task(self):
         ranges = self.selectedRanges()
         row = ranges[0].topRow()
         return self.item(row, 0).work
+
+    def get_selected_multi_sg_task(self):
+        works = []
+        for row in self.get_selected_indexes():
+            works.append(self.item(row, 0).work)
+        return works
 
     def get_selected_indexes(self):
         ranges = self.selectedRanges()
@@ -284,12 +246,6 @@ class WorkList(QTableWidget):
                 row = top_row + i
                 selected.append(row)
         return sorted(selected)
-
-    def _get_selected(self):
-        works = []
-        for row in self.get_selected_indexes():
-            works.append(self.item(row, 0).work)
-        return works
 
     def get_selected_work_names(self):
         selected = []
@@ -316,10 +272,10 @@ class WorkList(QTableWidget):
         executer(func, *args or (), **kwargs or {})
 
     def _execute_single_job_as_func(self, callback, *args, **kwargs):
-        callback(self._get_selected_one(), *args, **kwargs)
+        callback(self.get_selected_single_sg_task(), *args, **kwargs)
 
     def _execute_multi_job_as_func(self, callback, *args, **kwargs):
-        callback(self._get_selected(), *args, **kwargs)
+        callback(self.get_selected_multi_sg_task(), *args, **kwargs)
 
 
 class LightingSceneManagerWindow(MainWindow):
@@ -337,6 +293,9 @@ class LightingSceneManagerWindow(MainWindow):
         #   2. 현재 씬 파일 파악 검색 (current)
         # 등 2가지가 있다.
         self.last_searching_mode = None
+
+        # 기능 버튼 모음 리스트
+        self.function_button_list = []
 
         self.ui()
         self.init_filters()
@@ -362,25 +321,42 @@ class LightingSceneManagerWindow(MainWindow):
         self.left_layout.setAlignment(Qt.AlignTop)
         self.left_layout.setSpacing(1)
 
-        self.sg_open_btn = Button('샷건 페이지')
+        self.sg_open_btn = FunctionButton('샷건 페이지')
         self.sg_open_btn.setIcon(QIcon(img_path('sg_logo.png')))
+        self.sg_open_btn.clicked.connect(self.open_sg_shot_page)
+        self.function_button_list.append(self.sg_open_btn)
 
         folder_label = TitleLabel('폴더')
-        self.an_folder_btn = Button('애니 폴더')
+        self.an_folder_btn = FunctionButton('애니 폴더')
         self.an_folder_btn.setIcon(QIcon(img_path('open.png')))
+        self.an_folder_btn.clicked.connect(self.open_an_folder)
+        self.function_button_list.append(self.an_folder_btn)
 
-        self.lt_folder_btn = Button('라이팅 폴더')
+        self.lt_folder_btn = FunctionButton('라이팅 폴더')
         self.lt_folder_btn.setIcon(QIcon(img_path('open.png')))
+        self.lt_folder_btn.clicked.connect(self.open_lt_folder)
+        self.function_button_list.append(self.lt_folder_btn)
 
-        open_label = TitleLabel('작업')
-        self.open_btn1 = Button('씬 열기 (확인용)')
-        self.open_btn2 = Button('씬 열기 (작업용)')
+        open_label = TitleLabel('씬 파일')
+        self.an_open_btn = FunctionButton('애니 씬 열기')
+        self.an_open_btn.clicked.connect(self.open_an_file)
+        self.function_button_list.append(self.an_open_btn)
+        self.lt_open_btn1 = FunctionButton('씬 열기 (확인용)')
+        self.lt_open_btn1.clicked.connect(self.open_lt_file)
+        self.function_button_list.append(self.lt_open_btn1)
+        self.lt_open_btn2 = FunctionButton('씬 열기 (작업용)')
+        self.lt_open_btn2.clicked.connect(partial(self.open_lt_file, in_progress=True))
+        self.function_button_list.append(self.lt_open_btn2)
 
         status_label = TitleLabel('상태변경')
-        self.status_wtg_btn = Button('Waiting to Start', korean=False)
-        self.status_ip_btn = Button('In Progress', korean=False)
-        self.status_fin_btn = Button('Final', korean=False)
-        self.status_rrq_btn = Button('Revision Requested', korean=False)
+        self.status_wtg_btn = FunctionButton('Waiting to Start', korean=False)
+        self.function_button_list.append(self.status_wtg_btn)
+        self.status_ip_btn = FunctionButton('In Progress', korean=False)
+        self.function_button_list.append(self.status_ip_btn)
+        self.status_fin_btn = FunctionButton('Final', korean=False)
+        self.function_button_list.append(self.status_fin_btn)
+        self.status_rrq_btn = FunctionButton('Revision Requested', korean=False)
+        self.function_button_list.append(self.status_rrq_btn)
 
         self.left_layout.addItem(QSpacerItem(0, 37))
         self.left_layout.addWidget(self.sg_open_btn)
@@ -390,8 +366,9 @@ class LightingSceneManagerWindow(MainWindow):
         self.left_layout.addWidget(self.lt_folder_btn)
         self.left_layout.addItem(QSpacerItem(0, 15))
         self.left_layout.addWidget(open_label)
-        self.left_layout.addWidget(self.open_btn1)
-        self.left_layout.addWidget(self.open_btn2)
+        self.left_layout.addWidget(self.an_open_btn)
+        self.left_layout.addWidget(self.lt_open_btn1)
+        self.left_layout.addWidget(self.lt_open_btn2)
         self.left_layout.addItem(QSpacerItem(0, 15))
         self.left_layout.addWidget(status_label)
         self.left_layout.addWidget(self.status_wtg_btn)
@@ -419,12 +396,12 @@ class LightingSceneManagerWindow(MainWindow):
         self.episode_filter_combo = FilterCombobox(self.init_episode_filter)
         self.episode_filter_combo.setView(QListView())
         self.episode_filter_combo.setFixedSize(100, 25)
-        self.episode_filter_combo.currentIndexChanged.connect(self.on_episode_changed)
+        self.episode_filter_combo.currentIndexChanged.connect(partial(Combobox.toggle_highlight, self.episode_filter_combo))
 
         self.status_filter_combo = FilterCombobox(self.init_status_filter)
         self.status_filter_combo.setView(QListView())
         self.status_filter_combo.setFixedSize(150, 25)
-        self.status_filter_combo.currentIndexChanged.connect(partial(self.on_combobox_changed, self.status_filter_combo))
+        self.status_filter_combo.currentIndexChanged.connect(partial(Combobox.toggle_highlight, self.status_filter_combo))
 
         # 검색버튼
         self.search_btn = Button('검색')
@@ -474,6 +451,7 @@ class LightingSceneManagerWindow(MainWindow):
 
         # 메인 위젯
         self.work_list = WorkList(parent=self)
+        self.work_list.itemSelectionChanged.connect(self.on_item_selection_changed)
 
         # 총 작업 개수 및 선택 개수
         self.count_layout = QHBoxLayout()
@@ -503,14 +481,39 @@ class LightingSceneManagerWindow(MainWindow):
 
         self.setMinimumSize(800, 700)
 
-    def open_sg_shot_page(self, sg_task):
-        sg = self.get_sg_connection('admin_apid')
+    def open_sg_shot_page(self):
+        sg_task = self.work_list.get_selected_single_sg_task()
+        sg = self.get_sg_connection('admin_api')
         url = '{}/detail/Shot/{}'.format(sg.SHOTGUN_URL, sg_task['entity']['id'])
         os.startfile(url)
 
-    def open_server_path(self, sg_task):
-        server_path = dirs(self.get_server_path(sg_task['entity']['name']))
-        open_folder(server_path)
+    def open_an_folder(self):
+        sg_task = self.work_list.get_selected_single_sg_task()
+        path = self.get_server_ani_path(sg_task['entity']['name'])
+        if os.path.isdir(path):
+            open_folder(path)
+        else:
+            errorbox('애니 폴더가 존재하지 않습니다.', parent=self)
+
+    def open_lt_folder(self):
+        sg_task = self.work_list.get_selected_single_sg_task()
+        path = dirs(self.get_server_path(sg_task['entity']['name']))
+        open_folder(path)
+
+    def open_an_file(self):
+        sg_task = self.work_list.get_selected_single_sg_task()
+        an_file = self.get_server_ani_file(sg_task['entity']['name'])
+        if not os.path.isfile(an_file):
+            errorbox('애니 씬 파일이 존재하지 않습니다.', parent=self)
+        if save_changes(parent=self):
+            cmds.file(an_file, force=True, open=True, ignoreVersion=True, prompt=False, options='v=0')
+
+    def open_lt_file(self, in_progress=False):
+        sg_task = self.work_list.get_selected_single_sg_task()
+        if in_progress:
+            self.open_work(sg_task, status='ip')
+        else:
+            self.open_work(sg_task)
 
     def init_work_list_header_widths(self):
         self.work_list.init_cell_widths()
@@ -542,10 +545,11 @@ class LightingSceneManagerWindow(MainWindow):
     def search_from_keyword(self):
         k = self.keyworkd_field.text()
         self.keyworkd_field.clear()
-        if 5 > len(k) > 6:
+        if len(k) < 5 or len(k) > 6:
             return
-        print(k[:2], k[2:])
-        shot_name = 'EP{}_C{}'.format(k[:2], k[2:])
+        ep = k[:2]
+        cut = k[2:]
+        shot_name = 'EP{}_C{}'.format(ep, cut)
         self.search_tasks(shot=shot_name)
 
     def search_tasks(self, shot=None, filtered_task_list=None, clear=False):
@@ -667,6 +671,17 @@ class LightingSceneManagerWindow(MainWindow):
             if back_color:
                 lt_status_item.setBackground(QColor(*back_color))
 
+            # 애니 파일 유무
+            an_file_item = QTableWidgetItem()
+            an_file_item.setTextAlignment(Qt.AlignCenter)
+            an_file = self.get_server_ani_file(sg_task['entity']['name'])
+            if os.path.isfile(an_file):
+                an_file_item.setText('O')
+                an_file_item.setForeground(QColor(Qt.green))
+            else:
+                an_file_item.setText('n/a')
+                an_file_item.setForeground(QColor(Qt.red))
+
             # AN 스테이터스
             an_status = an_sg_task_list[shot_name]
             an_status_item = QTableWidgetItem(Status.get_name(an_status))
@@ -700,9 +715,10 @@ class LightingSceneManagerWindow(MainWindow):
             self.work_list.setItem(row, 0, shot_name_item)
             self.work_list.setItem(row, 1, st_frame_item)
             self.work_list.setItem(row, 2, ed_frame_item)
-            self.work_list.setItem(row, 3, an_status_item)
-            self.work_list.setItem(row, 4, lt_status_item)
-            self.work_list.setItem(row, 5, updated_item)
+            self.work_list.setItem(row, 3, an_file_item)
+            self.work_list.setItem(row, 4, an_status_item)
+            self.work_list.setItem(row, 5, lt_status_item)
+            self.work_list.setItem(row, 6, updated_item)
 
         # 작업을 리스트에 넣기 전에 정렬 기능을 반드시 꺼야한다.
         self.work_list.setSortingEnabled(True)
@@ -770,10 +786,18 @@ class LightingSceneManagerWindow(MainWindow):
         return dirs(pathjoin(config.SV_LGT_PATH, ep))
 
     @staticmethod
-    def get_server_ani_path(shot_name):
+    def get_episode_from_sg_task(shot_name):
         buf = shot_name.split('_')
-        ep = buf[0]
-        cut = buf[1]
+        return buf[0]
+
+    @staticmethod
+    def get_cut_from_sg_task(shot_name):
+        buf = shot_name.split('_')
+        return buf[1]
+
+    def get_server_ani_path(self, shot_name):
+        ep = self.get_episode_from_sg_task(shot_name)
+        cut = self.get_cut_from_sg_task(shot_name)
         return pathjoin(config.SV_ANI_PATH, ep, cut, 'fdb')
 
     def get_server_ani_file(self, shot_name):
@@ -875,7 +899,7 @@ class LightingSceneManagerWindow(MainWindow):
                 )
                 cmds.file(force=True, save=True)
             else:
-                errorbox('애니메이션 씬 파일이 없습니다.', parent=self, korean=True)
+                errorbox('라이팅 씬 파일을 최초로 생성하려 하는데, 애니 씬 파일이 없습니다.', parent=self, korean=True)
                 return
 
         import moon.timeline
@@ -1005,16 +1029,19 @@ class LightingSceneManagerWindow(MainWindow):
         elif self.last_searching_mode == 'current':
             self.init_current_scene()
 
-    def on_episode_changed(self):
-        self.on_combobox_changed(self.episode_filter_combo)
+    def on_item_selection_changed(self):
+        log.debug('on_item_selection_changed()')
+        for btn in self.function_button_list:
+            btn.disable()
 
-    def on_combobox_changed(self, combobox, *args):
-        if combobox.currentIndex() > 0:
-            combobox.setStyleSheet(QCOMBOBOX_ORANGE_STYLESHEET)
-        else:
-            combobox.setStyleSheet(QCOMBOBOX_STYLESHEET_ENG)
-        self.work_list.clearSelection()
-        self.work_list.setEnabled(False)
+        if self.work_list.is_single_selected():
+            for btn in self.function_button_list:
+                btn.enable()
+        elif self.work_list.is_multi_selected():
+            self.status_wtg_btn.enable()
+            self.status_ip_btn.enable()
+            self.status_fin_btn.enable()
+            self.status_rrq_btn.enable()
 
 
 @authorized
