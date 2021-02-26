@@ -956,7 +956,7 @@ class LightingSceneManagerWindow(MainWindow):
         moon.clean.reset_display_smoothness()
 
         # 작업경로를 맞춰준다.
-        sv_scn_path = self.get_server_path()
+        sv_scn_path = self.get_server_path(sg_task['entity']['name'])
         set_retaining_path(sv_scn_path)
         set_workspace(sv_scn_path)
 
