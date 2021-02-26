@@ -338,13 +338,13 @@ class LightingSceneManagerWindow(MainWindow):
         self.function_button_list.append(self.lt_folder_btn)
 
         open_label = TitleLabel('씬 파일')
-        self.an_open_btn = FunctionButton('애니 씬 열기')
+        self.an_open_btn = FunctionButton('애니 열기')
         self.an_open_btn.clicked.connect(self.open_an_file)
         self.function_button_list.append(self.an_open_btn)
-        self.lt_open_btn1 = FunctionButton('씬 열기 (확인용)')
+        self.lt_open_btn1 = FunctionButton('라이팅 열기 (확인용)')
         self.lt_open_btn1.clicked.connect(self.open_lt_file)
         self.function_button_list.append(self.lt_open_btn1)
-        self.lt_open_btn2 = FunctionButton('씬 열기 (작업용)')
+        self.lt_open_btn2 = FunctionButton('라이팅 열기 (작업용)')
         self.lt_open_btn2.clicked.connect(partial(self.open_lt_file, in_progress=True))
         self.function_button_list.append(self.lt_open_btn2)
 
