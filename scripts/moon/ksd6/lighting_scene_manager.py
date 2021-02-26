@@ -894,18 +894,21 @@ class LightingSceneManagerWindow(MainWindow):
                 filters = [
                     ['id', 'is', sg_task['entity']['id']],
                 ]
-                fields = ['sg_light_set']
+                fields = ['sg_bg', 'sg_light_set']
                 sg_shot = sg.find('Shot', filters, fields)
                 if not sg_shot:
                     errorbox('샷건에 Shot이 없습니다.', parent=self)
+                    return
+                bg_set = sg_shot['sg_bg']
+                if not bg_set:
+                    errorbox('샷건에서 BG 어셋이 지정되어있지 않습니다.', parent=self)
                     return
                 lt_set = sg_shot['sg_light_set']
                 if not lt_set:
                     errorbox('샷건에서 라이팅 셋이 지정되어있지 않습니다.', parent=self)
                     return
-                buf = lt_set.split('_')
-                lt_set_path = pathjoin(config.SV_LIGHT_SET_PATH, namejoin(*buf[:-1]))
-                lt_set_file = pathjoin(lt_set_path, lt_set + '.ma')
+                lt_set_path = pathjoin(config.SV_LIGHT_SET_PATH, bg_set)
+                lt_set_file = pathjoin(lt_set_path, namejoin(bg_set, lt_set) + '.ma')
                 cmds.file(lt_set_file, force=True, open=True, ignoreVersion=True, promprt=False)
                 cmds.file(rename=sv_scn_file)
                 cmds.file(
