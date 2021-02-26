@@ -897,9 +897,12 @@ class LightingSceneManagerWindow(MainWindow):
                 fields = ['sg_light_set']
                 sg_shot = sg.find('Shot', filters, fields)
                 if not sg_shot:
-                    errorbox('샷건에 Shot이 없습니다.')
+                    errorbox('샷건에 Shot이 없습니다.', parent=self)
                     return
                 lt_set = sg_shot['sg_light_set']
+                if not lt_set:
+                    errorbox('샷건에서 라이팅 셋이 지정되어있지 않습니다.', parent=self)
+                    return
                 buf = lt_set.split('_')
                 lt_set_path = pathjoin(config.SV_LIGHT_SET_PATH, namejoin(*buf[:-1]))
                 lt_set_file = pathjoin(lt_set_path, lt_set + '.ma')
