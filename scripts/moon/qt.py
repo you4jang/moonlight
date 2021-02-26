@@ -434,6 +434,7 @@ if not pm.about(batch=True):
         def __init__(self, parent=maya_widget()):
             super(MainWindow, self).__init__(parent)
             self.setFont(MAIN_FONT)
+            self.setWindowTitle(WINDOW_TITLE)
             self.setWindowIcon(QIcon(QPixmap(img_path('moon_title_icon.png'))))
 
         def moveEvent(self, *args, **kwargs):
