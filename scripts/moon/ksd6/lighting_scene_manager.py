@@ -674,18 +674,12 @@ class LightingSceneManagerWindow(MainWindow):
         # 작업의 개수를 파악하여 row를 생성한다.
         self.work_list.setRowCount(len(lgt_sg_tasks))
 
-        existing_shot_list = []
-
         for row, sg_task in enumerate(lgt_sg_tasks):
             shot_name = sg_task['entity']['name']
             task_name = sg_task['content']
 
             shot_name_item = QTableWidgetItem(shot_name)
             shot_name_item.work = sg_task
-            if shot_name in existing_shot_list:
-                shot_name_item.setForeground(QColor(75, 75, 75))
-            else:
-                existing_shot_list.append(shot_name)
 
             # 태스크 이름
             task_name_item = QTableWidgetItem(task_name)
@@ -753,7 +747,7 @@ class LightingSceneManagerWindow(MainWindow):
         # 작업을 리스트에 넣기 전에 정렬 기능을 반드시 꺼야한다.
         self.work_list.setSortingEnabled(True)
 
-        self.count_work_list_items(len(existing_shot_list))
+        self.count_work_list_items()
         self.show_latest_search_time(elapsed_time=time.time() - start_time)
 
         self.work_list.setEnabled(True)
@@ -841,15 +835,9 @@ class LightingSceneManagerWindow(MainWindow):
         path = dirs(self.get_server_path(name))
         return pathjoin(path, name + '_Lgt.mb')
 
-    def count_work_list_items(self, shot_count=None):
+    def count_work_list_items(self):
         total_count = self.work_list.rowCount()
-        if not shot_count:
-            shot_count = total_count
-        msg = [
-            '<span style="color:lightgreen">샷 <b>{}</b></span>'.format(shot_count),
-            '<span style="color:lightblue">태스크 <b>{}</b></span>'.format(total_count),
-        ]
-        self.work_count.setText(' : '.join(msg))
+        self.work_count.setText('전체 <span style="color:lightgreen"><b>{}</b></span> 태스크'.format(total_count))
 
     def set_status(self, code):
         sg_tasks = self.work_list.get_selected_multi_sg_task()
@@ -859,7 +847,8 @@ class LightingSceneManagerWindow(MainWindow):
             sg.update('Task', sg_task['id'], data)
         self.reload_ui()
 
-    def set_render_global_set(self):
+    @staticmethod
+    def set_render_global_set():
         pm.undoInfo(openChunk=True)
 
         # 카메라 Far Clip 설정
@@ -1130,7 +1119,6 @@ class LightingSceneManagerWindow(MainWindow):
             self.init_current_scene()
 
     def on_item_selection_changed(self):
-        log.debug('on_item_selection_changed()')
         for btn in self.function_button_list:
             btn.disable()
 
