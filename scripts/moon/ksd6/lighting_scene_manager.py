@@ -483,6 +483,19 @@ class LightingSceneManagerWindow(MainWindow):
         self.work_list_layout.addLayout(self.count_layout)
 
         ####################################################################################################
+        # 오른쪽 레이아웃
+        ####################################################################################################
+        self.right_layout = QVBoxLayout()
+        self.right_layout.setAlignment(Qt.AlignTop)
+        self.right_layout.setSpacing(1)
+
+        render_set_btn = Button('렌더 글로벌 셋')
+        render_set_btn.clicked.connect(self.set_render_global_set)
+
+        self.right_layout.addItem(QSpacerItem(0, 33))
+        self.right_layout.addWidget(render_set_btn)
+
+        ####################################################################################################
         # 레이아웃 배치
         ####################################################################################################
         self.main_layout.addLayout(self.filter_layout)
@@ -490,6 +503,7 @@ class LightingSceneManagerWindow(MainWindow):
 
         self.center_layout.addLayout(self.left_layout)
         self.center_layout.addLayout(self.main_layout)
+        self.center_layout.addLayout(self.right_layout)
 
         self.window_layout.addLayout(self.center_layout)
 
@@ -844,6 +858,52 @@ class LightingSceneManagerWindow(MainWindow):
             data = {'sg_status_list': code}
             sg.update('Task', sg_task['id'], data)
         self.reload_ui()
+
+    def set_render_global_set(self):
+        pm.undoInfo(openChunk=True)
+
+        # 카메라 Far Clip 설정
+        for cam in [x for x in cmds.ls(type='camera')]:
+            try:
+                cmds.setAttr(cam + '.farClipPlane', 100000000)
+            except:
+                pass
+
+        current_render_layer = pm.editRenderLayerGlobals(query=True, currentRenderLayer=True)
+
+        pm.loadPlugin('vrayformaya', quiet=True)
+
+        # 레드쉬프트 렌더러로 변경
+        render_globals = pm.PyNode('defaultRenderGlobals')
+        pm.mel.eval('unifiedRenderGlobalsWindow();')
+        pm.mel.eval('fillSelectedTabForCurrentRenderer();')
+        pm.mel.eval('updateCurrentRendererSel("unifiedRenderGlobalsRendererSelOptionMenu");')
+        render_globals.currentRenderer.set(lock=False)
+        render_globals.currentRenderer.set('vray')
+        pm.mel.eval('rendererChanged')
+
+        vray_settings = pm.PyNode('vraySettings')
+        vray_settings.animType.set(True)
+        vray_settings.animBatchOnly.set(True)
+        render_globals.startFrame.set(pm.playbackOptions(query=True, minTime=True))
+        render_globals.endFrame.set(pm.playbackOptions(query=True, maxTime=True))
+
+        # render_globals.imageFilePrefix.set('<RenderLayer>/<AOV>/<Scene>_<RenderLayer>', type='string')
+        # render_globals.enableDefaultLight.set(False)
+        # render_globals.animation.set(True)
+        #
+        # default_resolution = pm.PyNode('defaultResolution')
+        # default_resolution.aspectLock.set(True)
+        # default_resolution.lockDeviceAspectRatio.set(False)
+        # default_resolution.width.set(1920)
+        # default_resolution.height.set(1080)
+        # default_resolution.imageSizeUnits.set(0)
+        # default_resolution.pixelDensityUnits.set(0)
+        # default_resolution.deviceAspectRatio.set(1.7769999504089355)
+        # default_resolution.pixelAspect.set(1)
+
+        pm.editRenderLayerGlobals(currentRenderLayer=current_render_layer)
+        pm.undoInfo(closeChunk=True)
 
     def show_latest_search_time(self, elapsed_time=None):
         message = '검색소요시간 <b>{:.02f}초</b>'.format(elapsed_time)
