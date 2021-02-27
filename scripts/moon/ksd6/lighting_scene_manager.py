@@ -492,8 +492,12 @@ class LightingSceneManagerWindow(MainWindow):
         render_set_btn = Button('렌더 글로벌 셋')
         render_set_btn.clicked.connect(self.set_render_global_set)
 
+        deadline_submitter_btn = Button('데드라인 서브미터')
+        deadline_submitter_btn.clicked.connect(self.open_deadline_submitter)
+
         self.right_layout.addItem(QSpacerItem(0, 33))
         self.right_layout.addWidget(render_set_btn)
+        self.right_layout.addWidget(deadline_submitter_btn)
 
         ####################################################################################################
         # 레이아웃 배치
@@ -537,6 +541,13 @@ class LightingSceneManagerWindow(MainWindow):
             errorbox('애니 씬 파일이 존재하지 않습니다.', parent=self)
         if save_changes(parent=self):
             cmds.file(an_file, force=True, open=True, ignoreVersion=True, prompt=False, options='v=0')
+
+    def open_deadline_submitter(self):
+        import moon.ksd6.deadline_submitter
+        reload(moon.ksd6.deadline_submitter)
+        moon.ksd6.deadline_submitter.main()
+        # pm.mel.eval('source "moon/ksd6/deadline_submitter.mel"')
+        # pm.mel.eval('ksd6_deadline_submitter()')
 
     def open_lt_file(self, in_progress=False):
         sg_task = self.work_list.get_selected_single_sg_task()
