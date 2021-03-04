@@ -914,10 +914,6 @@ class LightingSceneManagerWindow(MainWindow):
             ref.rename('{}_fdb_v001RN'.format(dst_shot_name))
             pm.lockNode(ref, lock=True)
             cmds.file(dst_an_file, loadReference=ref.name(), options='v=0', prompt=False, ignoreVersion=True)
-            sv_prj_path = dirs(pathjoin(config.SV_REN_PATH, dst_ep, dst_cut))
-            pm.workspace(sv_prj_path, openWorkspace=True)
-            set_retaining_path(dst_path)
-            add_recent_file(dst_file)
             break
 
         sg = self.get_sg_connection('admin_api')
