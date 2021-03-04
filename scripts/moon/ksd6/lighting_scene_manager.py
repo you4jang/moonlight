@@ -352,12 +352,15 @@ class LightingSceneManagerWindow(MainWindow):
         self.an_open_btn = FunctionButton('애니 열기')
         self.an_open_btn.clicked.connect(self.open_an_file)
         self.function_button_list.append(self.an_open_btn)
-        self.lt_open_btn1 = FunctionButton('라이팅 열기 (확인용)')
+        self.lt_create_btn = FunctionButton('라이팅 생성')
+        self.lt_create_btn.clicked.connect(self.create_lt_file)
+        self.function_button_list.append(self.lt_create_btn)
+        self.lt_open_btn1 = FunctionButton('라이팅 열기')
         self.lt_open_btn1.clicked.connect(self.open_lt_file)
         self.function_button_list.append(self.lt_open_btn1)
-        self.lt_open_btn2 = FunctionButton('라이팅 열기 (작업용)')
-        self.lt_open_btn2.clicked.connect(partial(self.open_lt_file, in_progress=True))
-        self.function_button_list.append(self.lt_open_btn2)
+        # self.lt_open_btn2 = FunctionButton('라이팅 열기 (작업용)')
+        # self.lt_open_btn2.clicked.connect(partial(self.open_lt_file, in_progress=True))
+        # self.function_button_list.append(self.lt_open_btn2)
 
         status_label = TitleLabel('상태변경')
         self.status_wtg_btn = FunctionButton('Waiting to Start', korean=False)
@@ -382,8 +385,9 @@ class LightingSceneManagerWindow(MainWindow):
         self.left_layout.addItem(QSpacerItem(0, 15))
         self.left_layout.addWidget(open_label)
         self.left_layout.addWidget(self.an_open_btn)
+        self.left_layout.addWidget(self.lt_create_btn)
         self.left_layout.addWidget(self.lt_open_btn1)
-        self.left_layout.addWidget(self.lt_open_btn2)
+        # self.left_layout.addWidget(self.lt_open_btn2)
         self.left_layout.addItem(QSpacerItem(0, 15))
         self.left_layout.addWidget(status_label)
         self.left_layout.addWidget(self.status_wtg_btn)
@@ -561,6 +565,10 @@ class LightingSceneManagerWindow(MainWindow):
             self.open_work(sg_task, status='ip')
         else:
             self.open_work(sg_task)
+
+    def create_lt_file(self):
+        sg_task = self.work_list.get_selected_single_sg_task()
+        self.open_work(sg_task, status='ip', create=True)
 
     def init_work_list_header_widths(self):
         self.work_list.init_cell_widths()
@@ -985,7 +993,7 @@ class LightingSceneManagerWindow(MainWindow):
         pprint(sg_task)
 
     @authorized
-    def open_work(self, sg_task, status=None, complete_message=True):
+    def open_work(self, sg_task, status=None, complete_message=True, create=False):
         shot_name = sg_task['entity']['name']
 
         sv_ani_file = self.get_server_ani_file(shot_name)
@@ -1021,16 +1029,7 @@ class LightingSceneManagerWindow(MainWindow):
             if sg_task['sg_status_list'] not in ['wtg', 'rrq', 'hld']:
                 status = None
 
-        if os.path.isfile(sv_scn_file):
-            cmds.file(
-                sv_scn_file,
-                force=True,
-                open=True,
-                prompt=False,
-                ignoreVersion=True,
-                preserveReferences=True,
-            )
-        else:
+        if create:
             if os.path.isfile(sv_ani_file):
                 sg = self.get_sg_connection('admin_api')
                 filters = [
@@ -1064,8 +1063,20 @@ class LightingSceneManagerWindow(MainWindow):
                 )
                 cmds.file(force=True, save=True)
             else:
-                errorbox('라이팅 씬 파일을 최초로 생성하려 하는데, 애니 씬 파일이 없습니다.', parent=self, korean=True)
+                errorbox('라이팅 씬 파일을 최초로 생성하려 하는데, 애니 씬 파일이 없습니다.', parent=self)
                 return
+        else:
+            if os.path.isfile(sv_scn_file):
+                cmds.file(
+                    sv_scn_file,
+                    force=True,
+                    open=True,
+                    prompt=False,
+                    ignoreVersion=True,
+                    preserveReferences=True,
+                )
+            else:
+                errorbox('라이팅 씬 파일이 없습니다.', parent=self)
 
         import moon.timeline
         reload(moon.timeline)
