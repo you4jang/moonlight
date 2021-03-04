@@ -495,9 +495,14 @@ class LightingSceneManagerWindow(MainWindow):
         deadline_submitter_btn = Button('데드라인 서브미터')
         deadline_submitter_btn.clicked.connect(self.open_deadline_submitter)
 
+        copy_btn = Button('씬 복사')
+        copy_btn.clicked.connect(self.copy_scene_to)
+
         self.right_layout.addItem(QSpacerItem(0, 33))
         self.right_layout.addWidget(render_set_btn)
         self.right_layout.addWidget(deadline_submitter_btn)
+        self.right_layout.addItem(QSpacerItem(0, 10))
+        self.right_layout.addWidget(copy_btn)
 
         ####################################################################################################
         # 레이아웃 배치
@@ -523,11 +528,10 @@ class LightingSceneManagerWindow(MainWindow):
 
     def open_an_folder(self):
         sg_task = self.work_list.get_selected_single_sg_task()
-        path = self.get_server_ani_path(sg_task['entity']['name'])
+        path = dirs(self.get_server_ani_path(sg_task['entity']['name']))
+        log.debug('ani path : {}'.format(path))
         if os.path.isdir(path):
             open_folder(path)
-        else:
-            errorbox('애니 폴더가 존재하지 않습니다.', parent=self)
 
     def open_lt_folder(self):
         sg_task = self.work_list.get_selected_single_sg_task()
@@ -537,8 +541,10 @@ class LightingSceneManagerWindow(MainWindow):
     def open_an_file(self):
         sg_task = self.work_list.get_selected_single_sg_task()
         an_file = self.get_server_ani_file(sg_task['entity']['name'])
+        log.debug('an_file : {}'.format(an_file))
         if not os.path.isfile(an_file):
             errorbox('애니 씬 파일이 존재하지 않습니다.', parent=self)
+            return
         if save_changes(parent=self):
             cmds.file(an_file, force=True, open=True, ignoreVersion=True, prompt=False, options='v=0')
 
@@ -816,8 +822,8 @@ class LightingSceneManagerWindow(MainWindow):
         return self.status_filter_combo.currentText()
 
     @staticmethod
-    def get_server_path(name):
-        ep = name.split('_')[0]
+    def get_server_path(shot_name):
+        ep = shot_name.split('_')[0]
         return dirs(pathjoin(config.SV_LGT_PATH, ep))
 
     @staticmethod
@@ -842,9 +848,73 @@ class LightingSceneManagerWindow(MainWindow):
         path = self.get_server_ani_path(shot_name)
         return pathjoin(path, namejoin(ep, cut, 'fdb', 'v001.ma'))
 
-    def get_server_file(self, name):
-        path = dirs(self.get_server_path(name))
-        return pathjoin(path, name + '_Lgt.mb')
+    def get_server_file(self, shot_name):
+        path = dirs(self.get_server_path(shot_name))
+        return pathjoin(path, shot_name + '_Lgt.mb')
+
+    def copy_scene_to(self, *args):
+        cur = cmds.file(query=True, sceneName=True, shortName=True)
+        if not cur:
+            return
+        buf = basenameex(cur).split('_')
+        ep = buf[0]
+        cut = buf[1]
+
+        win = CopyToWindow(ep, cut, self.get_sg_connection('admin_api'), parent=self)
+        result = win.exec_()
+        if not result:
+            return
+        dst_ep, dst_cut = win.get_target_info()
+
+        src_shot_name = namejoin(ep, cut)
+        dst_shot_name = namejoin(dst_ep, dst_cut)
+        log.debug('dst_shot_name: {}'.format(dst_shot_name))
+
+        src_file = cmds.file(query=True, sceneName=True)
+
+        dst_path = self.get_server_path(dst_shot_name)
+        dst_file = self.get_server_file(dst_shot_name)
+
+        # 이미 파일이 존재하고 있을 때는 어떻게 할 것인가?
+        # 덮어쓰기 할 지 물어본다.
+        buttons = overwrite, cancel = '덮어쓰기', '취소'
+        if os.path.isfile(dst_file):
+            result = questionbox(
+                parent=self,
+                title='대상 파일 있음!',
+                message='복사하려는 파일이 이미 존재합니다.',
+                icon='question',
+                button=buttons,
+                default=overwrite,
+                cancel=cancel,
+                dismiss=cancel,
+            )
+            if result == cancel:
+                return
+
+        dirs(dst_path)
+        cmds.file(rename=dst_file)
+        cmds.file(force=True, save=True)
+
+        dst_an_file = self.get_server_ani_file(dst_shot_name)
+        log.debug('dst_an_file : {}'.format(dst_an_file))
+
+        for ref in pm.ls(type='reference'):
+            if ref.name() != '{}_fdb_v001RN'.format(src_shot_name):
+                continue
+            pm.lockNode(ref, lock=False)
+            ref.rename('{}_fdb_v001RN'.format(dst_shot_name))
+            pm.lockNode(ref, lock=True)
+            cmds.file(dst_an_file, loadReference=ref.name(), options='v=0', prompt=False, ignoreVersion=True)
+            break
+
+        msg = Message()
+        msg.title('파일복사 완료')
+        msg.add('선택한 파일의 복사가 완료되었습니다.')
+        msg.br()
+        msg.add('원본파일 : {}'.format(src_file))
+        msg.add('대상파일 : {}'.format(dst_file))
+        infobox(msg, self)
 
     def count_work_list_items(self):
         total_count = self.work_list.rowCount()
@@ -1141,6 +1211,104 @@ class LightingSceneManagerWindow(MainWindow):
             self.status_ip_btn.enable()
             self.status_fin_btn.enable()
             self.status_rrq_btn.enable()
+
+
+class CopyToWindow(QDialog):
+
+    HEADER_LABELS = ['Shot', 'Task', 'Status', 'Assigned To', 'Updated At']
+    COLUMN_WIDTHS = [150, 100, 80, 120, 150]
+
+    def __init__(self, ep, cut, sg, parent=None):
+        super(CopyToWindow, self).__init__(parent)
+        self.ep = ep
+        self.cut = cut
+        self.sg = sg
+        self._ep = None
+        self._cut = None
+        self.parent = parent
+        self.ui()
+
+    def ui(self):
+        self.setWindowTitle(self.parent.windowTitle())
+
+        self.main_layout = QVBoxLayout(self)
+        self.main_layout.setContentsMargins(15, 15, 15, 15)
+        self.main_layout.setAlignment(Qt.AlignTop)
+        self.main_layout.setSpacing(6)
+
+        # 씬 번호 레이아웃
+        shot_name_layout = QHBoxLayout()
+        shot_name_layout.setSpacing(3)
+
+        ep_label = QLabel('Episode')
+        ep_label.setFixedHeight(25)
+
+        self.ep_field = LineEdit()
+        self.ep_field.setFixedWidth(80)
+        self.ep_field.setFixedHeight(25)
+
+        cut_label = QLabel('Cut')
+        cut_label.setFixedHeight(25)
+
+        self.cut_field = LineEdit()
+        self.cut_field.setFixedWidth(80)
+        self.cut_field.setFixedHeight(25)
+
+        shot_name_layout.addWidget(ep_label)
+        shot_name_layout.addWidget(self.ep_field)
+        shot_name_layout.addItem(QSpacerItem(30, 0))
+        shot_name_layout.addWidget(cut_label)
+        shot_name_layout.addWidget(self.cut_field)
+        shot_name_layout.addItem(QSpacerItem(30, 0, QSizePolicy.Expanding, QSizePolicy.Fixed))
+
+        # 하단 레이아웃
+        bottom_layout = QHBoxLayout()
+
+        ok_button = Button('파일복사')
+        ok_button.setFixedWidth(80)
+        ok_button.clicked.connect(self.submit)
+
+        cancel_button = Button('취소')
+        cancel_button.setFixedWidth(80)
+        cancel_button.clicked.connect(self.reject)
+
+        bottom_layout.addItem(QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Fixed))
+        bottom_layout.addWidget(ok_button)
+        bottom_layout.addWidget(cancel_button)
+        bottom_layout.addItem(QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Fixed))
+
+        self.main_layout.addLayout(shot_name_layout)
+        self.main_layout.addLayout(bottom_layout)
+
+        self.setFixedSize(self.sizeHint())
+
+    def submit(self):
+        ep = self.ep_field.text()
+        if not ep:
+            return
+        ep = ep.strip()
+        regex = re.match(r'^\d\d$', ep)
+        if not regex:
+            return
+        cut = self.cut_field.text()
+        if not cut:
+            return
+        cut = cut.strip()
+        regex = re.match(r'^\d\d\d[a-z]?$', cut)
+        if not regex:
+            return
+
+        if 'EP{}'.format(ep) == self.ep and 'C{}'.format(cut) == self.cut:
+            errorbox('현재 열려있는 씬 파일의 이름과 같습니다.', self)
+            return
+
+        self._ep = 'EP{}'.format(ep)
+        self._cut = 'C{}'.format(cut)
+
+        self.accept()
+
+    def get_target_info(self):
+        return self._ep, self._cut
 
 
 @authorized
