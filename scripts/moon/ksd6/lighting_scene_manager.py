@@ -860,7 +860,7 @@ class LightingSceneManagerWindow(MainWindow):
         path = dirs(self.get_server_path(shot_name))
         return pathjoin(path, shot_name + '_Lgt.mb')
 
-    def copy_scene_to(self, *args):
+    def copy_scene_to(self):
         cur = cmds.file(query=True, sceneName=True, shortName=True)
         if not cur:
             return
@@ -919,6 +919,29 @@ class LightingSceneManagerWindow(MainWindow):
             set_retaining_path(dst_path)
             add_recent_file(dst_file)
             break
+
+        sg = self.get_sg_connection('admin_api')
+        filters = [
+            ['project', 'is', config.SG_PROJECT],
+            ['step', 'is', config.SG_STEP_LIGHTING],
+            ['content', 'is', 'Lighting'],
+            ['entity.Shot.code', 'is', dst_shot_name],
+        ]
+        fields = [
+            'content',
+            'entity',
+            'entity.Shot.sg_cut_in',
+            'entity.Shot.sg_cut_out',
+            'task_assignees',
+            'sg_status_list',
+            'updated_at',
+            'sg_description',
+            'step',
+        ]
+
+        sg_task = sg.find_one('Task', filters, fields)
+
+        self.init_scene_openning_set(sg_task, 'ip')
 
         msg = Message()
         msg.title('파일복사 완료')
@@ -997,7 +1020,7 @@ class LightingSceneManagerWindow(MainWindow):
         pprint(sg_task)
 
     @authorized
-    def open_work(self, sg_task, status=None, complete_message=True, create=False):
+    def open_work(self, sg_task, status=None, complete_message=True, create=False, replace=None):
         shot_name = sg_task['entity']['name']
 
         sv_ani_file = self.get_server_ani_file(shot_name)
@@ -1082,6 +1105,29 @@ class LightingSceneManagerWindow(MainWindow):
             else:
                 errorbox('라이팅 씬 파일이 없습니다.', parent=self)
 
+        self.init_scene_openning_set(sg_task, status)
+
+        if complete_message:
+            msg = Message()
+            msg.title('파일 열기 완료')
+            msg.add('씬 파일이 열렸습니다.')
+            msg.br()
+            msg.add('파일이름 :')
+            msg.add_filename(sv_scn_file)
+            msg.br()
+            msg.add('진행상태(Status) 변경 :')
+            if status is not None:
+                msg.add_filename(Status.get_name(status))
+            else:
+                msg.add_filename('변경없음')
+            msg.end()
+            infobox(msg, self)
+
+    def init_scene_openning_set(self, sg_task, status):
+        shot_name = sg_task['entity']['name']
+
+        sv_scn_file = self.get_server_file(shot_name)
+
         import moon.timeline
         reload(moon.timeline)
         moon.timeline.set_fps(24)
@@ -1118,22 +1164,6 @@ class LightingSceneManagerWindow(MainWindow):
             sg.update('Task', sg_task['id'], {'sg_status_list': status})
 
         self.reload_ui()
-
-        if complete_message:
-            msg = Message()
-            msg.title('파일 열기 완료')
-            msg.add('씬 파일이 열렸습니다.')
-            msg.br()
-            msg.add('파일이름 :')
-            msg.add_filename(sv_scn_file)
-            msg.br()
-            msg.add('진행상태(Status) 변경 :')
-            if status is not None:
-                msg.add_filename(Status.get_name(status))
-            else:
-                msg.add_filename('변경없음')
-            msg.end()
-            infobox(msg, self)
 
     def upload(self, sg_task, status, dialog=False, target_open=False):
         if cmds.file(query=True, modified=True):
