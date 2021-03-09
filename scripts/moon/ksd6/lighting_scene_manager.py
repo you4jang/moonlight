@@ -352,12 +352,15 @@ class LightingSceneManagerWindow(MainWindow):
         self.an_open_btn = FunctionButton('애니 열기')
         self.an_open_btn.clicked.connect(self.open_an_file)
         self.function_button_list.append(self.an_open_btn)
-        self.lt_open_btn1 = FunctionButton('라이팅 열기 (확인용)')
+        self.lt_create_btn = FunctionButton('라이팅 생성')
+        self.lt_create_btn.clicked.connect(self.create_lt_file)
+        self.function_button_list.append(self.lt_create_btn)
+        self.lt_open_btn1 = FunctionButton('라이팅 열기')
         self.lt_open_btn1.clicked.connect(self.open_lt_file)
         self.function_button_list.append(self.lt_open_btn1)
-        self.lt_open_btn2 = FunctionButton('라이팅 열기 (작업용)')
-        self.lt_open_btn2.clicked.connect(partial(self.open_lt_file, in_progress=True))
-        self.function_button_list.append(self.lt_open_btn2)
+        # self.lt_open_btn2 = FunctionButton('라이팅 열기 (작업용)')
+        # self.lt_open_btn2.clicked.connect(partial(self.open_lt_file, in_progress=True))
+        # self.function_button_list.append(self.lt_open_btn2)
 
         status_label = TitleLabel('상태변경')
         self.status_wtg_btn = FunctionButton('Waiting to Start', korean=False)
@@ -382,8 +385,9 @@ class LightingSceneManagerWindow(MainWindow):
         self.left_layout.addItem(QSpacerItem(0, 15))
         self.left_layout.addWidget(open_label)
         self.left_layout.addWidget(self.an_open_btn)
+        self.left_layout.addWidget(self.lt_create_btn)
         self.left_layout.addWidget(self.lt_open_btn1)
-        self.left_layout.addWidget(self.lt_open_btn2)
+        # self.left_layout.addWidget(self.lt_open_btn2)
         self.left_layout.addItem(QSpacerItem(0, 15))
         self.left_layout.addWidget(status_label)
         self.left_layout.addWidget(self.status_wtg_btn)
@@ -483,6 +487,28 @@ class LightingSceneManagerWindow(MainWindow):
         self.work_list_layout.addLayout(self.count_layout)
 
         ####################################################################################################
+        # 오른쪽 레이아웃
+        ####################################################################################################
+        self.right_layout = QVBoxLayout()
+        self.right_layout.setAlignment(Qt.AlignTop)
+        self.right_layout.setSpacing(1)
+
+        render_set_btn = Button('렌더 글로벌 셋')
+        render_set_btn.clicked.connect(self.set_render_global_set)
+
+        deadline_submitter_btn = Button('데드라인 서브미터')
+        deadline_submitter_btn.clicked.connect(self.open_deadline_submitter)
+
+        copy_btn = Button('씬 복사')
+        copy_btn.clicked.connect(self.copy_scene_to)
+
+        self.right_layout.addItem(QSpacerItem(0, 33))
+        self.right_layout.addWidget(render_set_btn)
+        self.right_layout.addWidget(deadline_submitter_btn)
+        self.right_layout.addItem(QSpacerItem(0, 10))
+        self.right_layout.addWidget(copy_btn)
+
+        ####################################################################################################
         # 레이아웃 배치
         ####################################################################################################
         self.main_layout.addLayout(self.filter_layout)
@@ -490,6 +516,7 @@ class LightingSceneManagerWindow(MainWindow):
 
         self.center_layout.addLayout(self.left_layout)
         self.center_layout.addLayout(self.main_layout)
+        self.center_layout.addLayout(self.right_layout)
 
         self.window_layout.addLayout(self.center_layout)
 
@@ -505,11 +532,10 @@ class LightingSceneManagerWindow(MainWindow):
 
     def open_an_folder(self):
         sg_task = self.work_list.get_selected_single_sg_task()
-        path = self.get_server_ani_path(sg_task['entity']['name'])
+        path = dirs(self.get_server_ani_path(sg_task['entity']['name']))
+        log.debug('ani path : {}'.format(path))
         if os.path.isdir(path):
             open_folder(path)
-        else:
-            errorbox('애니 폴더가 존재하지 않습니다.', parent=self)
 
     def open_lt_folder(self):
         sg_task = self.work_list.get_selected_single_sg_task()
@@ -519,10 +545,19 @@ class LightingSceneManagerWindow(MainWindow):
     def open_an_file(self):
         sg_task = self.work_list.get_selected_single_sg_task()
         an_file = self.get_server_ani_file(sg_task['entity']['name'])
+        log.debug('an_file : {}'.format(an_file))
         if not os.path.isfile(an_file):
             errorbox('애니 씬 파일이 존재하지 않습니다.', parent=self)
+            return
         if save_changes(parent=self):
             cmds.file(an_file, force=True, open=True, ignoreVersion=True, prompt=False, options='v=0')
+
+    def open_deadline_submitter(self):
+        import moon.ksd6.deadline_submitter
+        reload(moon.ksd6.deadline_submitter)
+        moon.ksd6.deadline_submitter.main()
+        # pm.mel.eval('source "moon/ksd6/deadline_submitter.mel"')
+        # pm.mel.eval('ksd6_deadline_submitter()')
 
     def open_lt_file(self, in_progress=False):
         sg_task = self.work_list.get_selected_single_sg_task()
@@ -530,6 +565,10 @@ class LightingSceneManagerWindow(MainWindow):
             self.open_work(sg_task, status='ip')
         else:
             self.open_work(sg_task)
+
+    def create_lt_file(self):
+        sg_task = self.work_list.get_selected_single_sg_task()
+        self.open_work(sg_task, status='ip', create=True)
 
     def init_work_list_header_widths(self):
         self.work_list.init_cell_widths()
@@ -660,18 +699,12 @@ class LightingSceneManagerWindow(MainWindow):
         # 작업의 개수를 파악하여 row를 생성한다.
         self.work_list.setRowCount(len(lgt_sg_tasks))
 
-        existing_shot_list = []
-
         for row, sg_task in enumerate(lgt_sg_tasks):
             shot_name = sg_task['entity']['name']
             task_name = sg_task['content']
 
             shot_name_item = QTableWidgetItem(shot_name)
             shot_name_item.work = sg_task
-            if shot_name in existing_shot_list:
-                shot_name_item.setForeground(QColor(75, 75, 75))
-            else:
-                existing_shot_list.append(shot_name)
 
             # 태스크 이름
             task_name_item = QTableWidgetItem(task_name)
@@ -739,7 +772,7 @@ class LightingSceneManagerWindow(MainWindow):
         # 작업을 리스트에 넣기 전에 정렬 기능을 반드시 꺼야한다.
         self.work_list.setSortingEnabled(True)
 
-        self.count_work_list_items(len(existing_shot_list))
+        self.count_work_list_items()
         self.show_latest_search_time(elapsed_time=time.time() - start_time)
 
         self.work_list.setEnabled(True)
@@ -797,8 +830,8 @@ class LightingSceneManagerWindow(MainWindow):
         return self.status_filter_combo.currentText()
 
     @staticmethod
-    def get_server_path(name):
-        ep = name.split('_')[0]
+    def get_server_path(shot_name):
+        ep = shot_name.split('_')[0]
         return dirs(pathjoin(config.SV_LGT_PATH, ep))
 
     @staticmethod
@@ -827,15 +860,96 @@ class LightingSceneManagerWindow(MainWindow):
         path = dirs(self.get_server_path(name))
         return pathjoin(path, name + '_Lgt.ma')
 
-    def count_work_list_items(self, shot_count=None):
-        total_count = self.work_list.rowCount()
-        if not shot_count:
-            shot_count = total_count
-        msg = [
-            '<span style="color:lightgreen">샷 <b>{}</b></span>'.format(shot_count),
-            '<span style="color:lightblue">태스크 <b>{}</b></span>'.format(total_count),
+    def copy_scene_to(self):
+        cur = cmds.file(query=True, sceneName=True, shortName=True)
+        if not cur:
+            return
+        buf = basenameex(cur).split('_')
+        ep = buf[0]
+        cut = buf[1]
+
+        win = CopyToWindow(ep, cut, self.get_sg_connection('admin_api'), parent=self)
+        result = win.exec_()
+        if not result:
+            return
+        dst_ep, dst_cut = win.get_target_info()
+
+        src_shot_name = namejoin(ep, cut)
+        dst_shot_name = namejoin(dst_ep, dst_cut)
+        log.debug('dst_shot_name: {}'.format(dst_shot_name))
+
+        src_file = cmds.file(query=True, sceneName=True)
+
+        dst_path = self.get_server_path(dst_shot_name)
+        dst_file = self.get_server_file(dst_shot_name)
+
+        # 이미 파일이 존재하고 있을 때는 어떻게 할 것인가?
+        # 덮어쓰기 할 지 물어본다.
+        buttons = overwrite, cancel = '덮어쓰기', '취소'
+        if os.path.isfile(dst_file):
+            result = questionbox(
+                parent=self,
+                title='대상 파일 있음!',
+                message='복사하려는 파일이 이미 존재합니다.',
+                icon='question',
+                button=buttons,
+                default=overwrite,
+                cancel=cancel,
+                dismiss=cancel,
+            )
+            if result == cancel:
+                return
+
+        dirs(dst_path)
+        cmds.file(rename=dst_file)
+        cmds.file(force=True, save=True)
+
+        dst_an_file = self.get_server_ani_file(dst_shot_name)
+        log.debug('dst_an_file : {}'.format(dst_an_file))
+
+        for ref in pm.ls(type='reference'):
+            if ref.name() != '{}_fdb_v001RN'.format(src_shot_name):
+                continue
+            pm.lockNode(ref, lock=False)
+            ref.rename('{}_fdb_v001RN'.format(dst_shot_name))
+            pm.lockNode(ref, lock=True)
+            cmds.file(dst_an_file, loadReference=ref.name(), options='v=0', prompt=False, ignoreVersion=True)
+            break
+
+        sg = self.get_sg_connection('admin_api')
+        filters = [
+            ['project', 'is', config.SG_PROJECT],
+            ['step', 'is', config.SG_STEP_LIGHTING],
+            ['content', 'is', 'Lighting'],
+            ['entity.Shot.code', 'is', dst_shot_name],
         ]
-        self.work_count.setText(' : '.join(msg))
+        fields = [
+            'content',
+            'entity',
+            'entity.Shot.sg_cut_in',
+            'entity.Shot.sg_cut_out',
+            'task_assignees',
+            'sg_status_list',
+            'updated_at',
+            'sg_description',
+            'step',
+        ]
+
+        sg_task = sg.find_one('Task', filters, fields)
+
+        self.init_scene_openning_set(sg_task, 'ip')
+
+        msg = Message()
+        msg.title('파일복사 완료')
+        msg.add('선택한 파일의 복사가 완료되었습니다.')
+        msg.br()
+        msg.add('원본파일 : {}'.format(src_file))
+        msg.add('대상파일 : {}'.format(dst_file))
+        infobox(msg, self)
+
+    def count_work_list_items(self):
+        total_count = self.work_list.rowCount()
+        self.work_count.setText('전체 <span style="color:lightgreen"><b>{}</b></span> 태스크'.format(total_count))
 
     def set_status(self, code):
         sg_tasks = self.work_list.get_selected_multi_sg_task()
@@ -844,6 +958,53 @@ class LightingSceneManagerWindow(MainWindow):
             data = {'sg_status_list': code}
             sg.update('Task', sg_task['id'], data)
         self.reload_ui()
+
+    @staticmethod
+    def set_render_global_set():
+        pm.undoInfo(openChunk=True)
+
+        # 카메라 Far Clip 설정
+        for cam in [x for x in cmds.ls(type='camera')]:
+            try:
+                cmds.setAttr(cam + '.farClipPlane', 100000000)
+            except:
+                pass
+
+        current_render_layer = pm.editRenderLayerGlobals(query=True, currentRenderLayer=True)
+
+        pm.loadPlugin('vrayformaya', quiet=True)
+
+        # 레드쉬프트 렌더러로 변경
+        render_globals = pm.PyNode('defaultRenderGlobals')
+        pm.mel.eval('unifiedRenderGlobalsWindow();')
+        pm.mel.eval('fillSelectedTabForCurrentRenderer();')
+        pm.mel.eval('updateCurrentRendererSel("unifiedRenderGlobalsRendererSelOptionMenu");')
+        render_globals.currentRenderer.set(lock=False)
+        render_globals.currentRenderer.set('vray')
+        pm.mel.eval('rendererChanged')
+
+        vray_settings = pm.PyNode('vraySettings')
+        vray_settings.animType.set(True)
+        vray_settings.animBatchOnly.set(True)
+        render_globals.startFrame.set(pm.playbackOptions(query=True, minTime=True))
+        render_globals.endFrame.set(pm.playbackOptions(query=True, maxTime=True))
+
+        # render_globals.imageFilePrefix.set('<RenderLayer>/<AOV>/<Scene>_<RenderLayer>', type='string')
+        # render_globals.enableDefaultLight.set(False)
+        # render_globals.animation.set(True)
+        #
+        # default_resolution = pm.PyNode('defaultResolution')
+        # default_resolution.aspectLock.set(True)
+        # default_resolution.lockDeviceAspectRatio.set(False)
+        # default_resolution.width.set(1920)
+        # default_resolution.height.set(1080)
+        # default_resolution.imageSizeUnits.set(0)
+        # default_resolution.pixelDensityUnits.set(0)
+        # default_resolution.deviceAspectRatio.set(1.7769999504089355)
+        # default_resolution.pixelAspect.set(1)
+
+        pm.editRenderLayerGlobals(currentRenderLayer=current_render_layer)
+        pm.undoInfo(closeChunk=True)
 
     def show_latest_search_time(self, elapsed_time=None):
         message = '검색소요시간 <b>{:.02f}초</b>'.format(elapsed_time)
@@ -855,7 +1016,7 @@ class LightingSceneManagerWindow(MainWindow):
         pprint(sg_task)
 
     @authorized
-    def open_work(self, sg_task, status=None, complete_message=True):
+    def open_work(self, sg_task, status=None, complete_message=True, create=False, replace=None):
         shot_name = sg_task['entity']['name']
 
         sv_ani_file = self.get_server_ani_file(shot_name)
@@ -891,16 +1052,7 @@ class LightingSceneManagerWindow(MainWindow):
             if sg_task['sg_status_list'] not in ['wtg', 'rrq', 'hld']:
                 status = None
 
-        if os.path.isfile(sv_scn_file):
-            cmds.file(
-                sv_scn_file,
-                force=True,
-                open=True,
-                prompt=False,
-                ignoreVersion=True,
-                preserveReferences=True,
-            )
-        else:
+        if create:
             if os.path.isfile(sv_ani_file):
                 sg = self.get_sg_connection('admin_api')
                 filters = [
@@ -934,8 +1086,43 @@ class LightingSceneManagerWindow(MainWindow):
                 )
                 cmds.file(force=True, save=True)
             else:
-                errorbox('라이팅 씬 파일을 최초로 생성하려 하는데, 애니 씬 파일이 없습니다.', parent=self, korean=True)
+                errorbox('라이팅 씬 파일을 최초로 생성하려 하는데, 애니 씬 파일이 없습니다.', parent=self)
                 return
+        else:
+            if os.path.isfile(sv_scn_file):
+                cmds.file(
+                    sv_scn_file,
+                    force=True,
+                    open=True,
+                    prompt=False,
+                    ignoreVersion=True,
+                    preserveReferences=True,
+                )
+            else:
+                errorbox('라이팅 씬 파일이 없습니다.', parent=self)
+
+        self.init_scene_openning_set(sg_task, status)
+
+        if complete_message:
+            msg = Message()
+            msg.title('파일 열기 완료')
+            msg.add('씬 파일이 열렸습니다.')
+            msg.br()
+            msg.add('파일이름 :')
+            msg.add_filename(sv_scn_file)
+            msg.br()
+            msg.add('진행상태(Status) 변경 :')
+            if status is not None:
+                msg.add_filename(Status.get_name(status))
+            else:
+                msg.add_filename('변경없음')
+            msg.end()
+            infobox(msg, self)
+
+    def init_scene_openning_set(self, sg_task, status):
+        shot_name = sg_task['entity']['name']
+
+        sv_scn_file = self.get_server_file(shot_name)
 
         import moon.timeline
         reload(moon.timeline)
@@ -973,22 +1160,6 @@ class LightingSceneManagerWindow(MainWindow):
             sg.update('Task', sg_task['id'], {'sg_status_list': status})
 
         self.reload_ui()
-
-        if complete_message:
-            msg = Message()
-            msg.title('파일 열기 완료')
-            msg.add('씬 파일이 열렸습니다.')
-            msg.br()
-            msg.add('파일이름 :')
-            msg.add_filename(sv_scn_file)
-            msg.br()
-            msg.add('진행상태(Status) 변경 :')
-            if status is not None:
-                msg.add_filename(Status.get_name(status))
-            else:
-                msg.add_filename('변경없음')
-            msg.end()
-            infobox(msg, self)
 
     def upload(self, sg_task, status, dialog=False, target_open=False):
         if cmds.file(query=True, modified=True):
@@ -1070,7 +1241,6 @@ class LightingSceneManagerWindow(MainWindow):
             self.init_current_scene()
 
     def on_item_selection_changed(self):
-        log.debug('on_item_selection_changed()')
         for btn in self.function_button_list:
             btn.disable()
 
@@ -1082,6 +1252,104 @@ class LightingSceneManagerWindow(MainWindow):
             self.status_ip_btn.enable()
             self.status_fin_btn.enable()
             self.status_rrq_btn.enable()
+
+
+class CopyToWindow(QDialog):
+
+    HEADER_LABELS = ['Shot', 'Task', 'Status', 'Assigned To', 'Updated At']
+    COLUMN_WIDTHS = [150, 100, 80, 120, 150]
+
+    def __init__(self, ep, cut, sg, parent=None):
+        super(CopyToWindow, self).__init__(parent)
+        self.ep = ep
+        self.cut = cut
+        self.sg = sg
+        self._ep = None
+        self._cut = None
+        self.parent = parent
+        self.ui()
+
+    def ui(self):
+        self.setWindowTitle(self.parent.windowTitle())
+
+        self.main_layout = QVBoxLayout(self)
+        self.main_layout.setContentsMargins(15, 15, 15, 15)
+        self.main_layout.setAlignment(Qt.AlignTop)
+        self.main_layout.setSpacing(6)
+
+        # 씬 번호 레이아웃
+        shot_name_layout = QHBoxLayout()
+        shot_name_layout.setSpacing(3)
+
+        ep_label = QLabel('Episode')
+        ep_label.setFixedHeight(25)
+
+        self.ep_field = LineEdit()
+        self.ep_field.setFixedWidth(80)
+        self.ep_field.setFixedHeight(25)
+
+        cut_label = QLabel('Cut')
+        cut_label.setFixedHeight(25)
+
+        self.cut_field = LineEdit()
+        self.cut_field.setFixedWidth(80)
+        self.cut_field.setFixedHeight(25)
+
+        shot_name_layout.addWidget(ep_label)
+        shot_name_layout.addWidget(self.ep_field)
+        shot_name_layout.addItem(QSpacerItem(30, 0))
+        shot_name_layout.addWidget(cut_label)
+        shot_name_layout.addWidget(self.cut_field)
+        shot_name_layout.addItem(QSpacerItem(30, 0, QSizePolicy.Expanding, QSizePolicy.Fixed))
+
+        # 하단 레이아웃
+        bottom_layout = QHBoxLayout()
+
+        ok_button = Button('파일복사')
+        ok_button.setFixedWidth(80)
+        ok_button.clicked.connect(self.submit)
+
+        cancel_button = Button('취소')
+        cancel_button.setFixedWidth(80)
+        cancel_button.clicked.connect(self.reject)
+
+        bottom_layout.addItem(QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Fixed))
+        bottom_layout.addWidget(ok_button)
+        bottom_layout.addWidget(cancel_button)
+        bottom_layout.addItem(QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Fixed))
+
+        self.main_layout.addLayout(shot_name_layout)
+        self.main_layout.addLayout(bottom_layout)
+
+        self.setFixedSize(self.sizeHint())
+
+    def submit(self):
+        ep = self.ep_field.text()
+        if not ep:
+            return
+        ep = ep.strip()
+        regex = re.match(r'^\d\d$', ep)
+        if not regex:
+            return
+        cut = self.cut_field.text()
+        if not cut:
+            return
+        cut = cut.strip()
+        regex = re.match(r'^\d\d\d[a-z]?$', cut)
+        if not regex:
+            return
+
+        if 'EP{}'.format(ep) == self.ep and 'C{}'.format(cut) == self.cut:
+            errorbox('현재 열려있는 씬 파일의 이름과 같습니다.', self)
+            return
+
+        self._ep = 'EP{}'.format(ep)
+        self._cut = 'C{}'.format(cut)
+
+        self.accept()
+
+    def get_target_info(self):
+        return self._ep, self._cut
 
 
 @authorized
