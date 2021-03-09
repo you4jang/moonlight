@@ -22,7 +22,7 @@ class DeadlineSubmitterWindow(MainDialog):
     SUSPENDED_JOB = False
     PRIORITY = '50'
     MACHINE_LIMIT = '0'
-    CHUNK_SIZE = '1'
+    CHUNK_SIZE = '5'
     CONCURRENT_TASK = '1'
     GPU_PER_TASK = '0'
 
