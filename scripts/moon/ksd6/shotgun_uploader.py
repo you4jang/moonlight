@@ -212,13 +212,14 @@ class ShotgunUploaderWindow(MainDialog):
             sg_task = sg.find_one('Task', filters)
             sg.update('Task', sg_task['id'], {'sg_status_list': status_code})
 
+            login_user = MoonLoginCookie.get_login_user().sg_user
             data = {
                 'project': config.SG_PROJECT,
                 'entity': sg_shot,
                 'sg_task': sg_task,
                 'code': basenameex(filename),
-                'user': self.sg_login_user,
-                'updated_by': self.sg_login_user,
+                'user': login_user,
+                'updated_by': login_user,
             }
             sg_version = sg.create('Version', data)
             sg.upload_thumbnail('Version', sg_version['id'], pathjoin(path, filename))
