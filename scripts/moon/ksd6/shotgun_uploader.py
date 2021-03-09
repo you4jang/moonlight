@@ -202,14 +202,14 @@ class ShotgunUploaderWindow(MainDialog):
                 ['project', 'is', config.SG_PROJECT],
                 ['code', 'is', shot_name],
             ]
-            sg_shot = sg.find('Shot', filters)
+            sg_shot = sg.find_one('Shot', filters)
 
             filters = [
                 ['project', 'is', config.SG_PROJECT],
                 ['content', 'is', task],
                 ['entity', 'is', sg_shot],
             ]
-            sg_task = sg.find('Task', filters)
+            sg_task = sg.find_one('Task', filters)
             sg.update('Task', sg_task['id'], {'sg_status_list': status_code})
 
             data = {
