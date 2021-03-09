@@ -825,7 +825,7 @@ class LightingSceneManagerWindow(MainWindow):
 
     def get_server_file(self, name):
         path = dirs(self.get_server_path(name))
-        return pathjoin(path, name + '_Lgt.mb')
+        return pathjoin(path, name + '_Lgt.ma')
 
     def count_work_list_items(self, shot_count=None):
         total_count = self.work_list.rowCount()
