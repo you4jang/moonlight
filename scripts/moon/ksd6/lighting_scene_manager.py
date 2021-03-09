@@ -173,7 +173,7 @@ class WorkList(QTableWidget):
         self.setWordWrap(False)
         self.setAlternatingRowColors(True)
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.doubleClicked.connect(self.open_work_with_dialog)
+        # self.doubleClicked.connect(self.open_work_with_dialog)
 
         self.header = self.horizontalHeader()
         # self.header.setStretchLastSection(True)
