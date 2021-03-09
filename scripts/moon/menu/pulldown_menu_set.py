@@ -49,72 +49,28 @@ MENUS = [
                     ),
                 },
             },
-    #         {
-    #             'kwargs': {
-    #                 'label': 'CC - Heads Up Display',
-    #                 'image': 'cc/hud.jpg',
-    #                 'command': crjoin(
-    #                     'import moon.cc.hud',
-    #                     'reload(moon.cc.hud)',
-    #                     'moon.cc.hud.main()',
-    #                 ),
-    #             },
-    #         },
-    #         {
-    #             'kwargs': {
-    #                 'label': 'CC - Playblast Manager',
-    #                 'image': 'video-player.png',
-    #                 'command': crjoin(
-    #                     'import moon.cc.playblast_manager',
-    #                     'reload(moon.cc.playblast_manager)',
-    #                     'moon.cc.playblast_manager.main()',
-    #                 ),
-    #             },
-    #         },
-    #         {
-    #             'kwargs': {
-    #                 'label': 'CC - Asset Loader',
-    #                 'image': 'cc/asset_loader.jpg',
-    #                 'command': crjoin(
-    #                     'import moon.cc.asset_loader',
-    #                     'reload(moon.cc.asset_loader)',
-    #                     'moon.cc.asset_loader.main()',
-    #                 ),
-    #             },
-    #         },
-    #         {
-    #             'kwargs': {
-    #                 'label': 'CC - Camera Baking',
-    #                 'image': 'cc/camera_baking.png',
-    #                 'command': crjoin(
-    #                     'import moon.cc.cam_bake',
-    #                     'reload(moon.cc.cam_bake)',
-    #                     'moon.cc.cam_bake.bake()',
-    #                 ),
-    #             },
-    #         },
         ],
     },
     ####################################################################################################
     # 카메라
     ####################################################################################################
-    # {
-    #     'kwargs': {
-    #         'divider': True,
-    #         'dividerLabel': 'Camera',
-    #     },
-    # },
-    # {
-    #     'kwargs': {
-    #         'label': 'Camera View Manager',
-    #         'image': 'camviewmgr.bmp',
-    #         'command': crjoin(
-    #             'import moon.apps.camviewmgr',
-    #             'reload(moon.apps.camviewmgr)',
-    #             'moon.apps.camviewmgr.main()',
-    #         ),
-    #     },
-    # },
+    {
+        'kwargs': {
+            'divider': True,
+            'dividerLabel': 'Camera',
+        },
+    },
+    {
+        'kwargs': {
+            'label': 'Camera View Manager',
+            'image': 'camviewmgr.bmp',
+            'command': crjoin(
+                'import moon.cam.camviewmgr',
+                'reload(moon.cam.camviewmgr)',
+                'moon.cam.camviewmgr.main()',
+            ),
+        },
+    },
     # {
     #     'kwargs': {
     #         'label': 'Follow Cam',
