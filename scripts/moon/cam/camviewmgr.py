@@ -114,6 +114,11 @@ class CameraViewList(QListWidget):
     def __init__(self, parent=None):
         super(CameraViewList, self).__init__(parent)
         self.parent = parent
+        self.clicked.connect(self.on_camera_selected)
+
+    def on_camera_selected(self):
+        selected = self.currentItem().text()
+        pm.select(selected, replace=True)
 
     def contextMenuEvent(self, event, *args, **kwargs):
         """마우스 우클릭 컨텍스트 메뉴 이벤트 재정의"""
@@ -127,7 +132,7 @@ class CameraViewList(QListWidget):
         tearoff_panel_action = menu.addAction('별도 패널 분리')
         duplicate_panel_action = menu.addAction('카메라 복사 후 별도 패널 분리')
         menu.addSeparator()
-        baked_action = menu.addAction('카메라 베이크')
+        action_cam_bake_abc = menu.addAction('카메라 베이크')
 
         action_delete = None
 
@@ -146,8 +151,8 @@ class CameraViewList(QListWidget):
             self.duplicate_panel()
         elif action is not None and action == action_delete:
             self.delete_panel()
-        elif action == baked_action:
-            self.bake()
+        elif action == action_cam_bake_abc:
+            self.bake(alembic=True)
 
     def mouseDoubleClickEvent(self, *args, **kwargs):
         """마우스로 더블-클릭 했을 때의 이벤트 재정의"""
@@ -262,13 +267,10 @@ class CameraViewList(QListWidget):
         cmds.modelEditor(modelpanel, edit=True, displayTextures=False)
         cmds.modelEditor(modelpanel, edit=True, selectionHiliteDisplay=False)
 
-    def bake(self):
-        """선택한 카메라를 베이크하여 원하는 파일로 출력한다."""
+    def bake(self, alembic=True):
+        pm.loadPlugin('AbcExport', quiet=True)
 
-        # 2020.06.10. 파일로 저장 기능은 폴더 위치, 파일이름 규칙이 만들어질 때까지 작동하지 않도록 한다.
-        # buttons = export, create, cancel = '파일로 저장', '씬 안에 생성', '취소'
-        buttons = export, create, cancel = '---', '씬 안에 생성', '취소'
-
+        buttons = export, create, cancel = '.abc 저장', '씬 안에 생성', '취소'
         option = questionbox(
             parent=self,
             title='출력형태 지정',
@@ -286,34 +288,23 @@ class CameraViewList(QListWidget):
         file_type = None
 
         if option == export:
-            return
-            optionvar = 'low_shader_maker_mec_last_path_optionvar'
+            optionvar = 'camviewmgr_last_exported_path'
 
-            # 어디에 저장하고 싶은지 물어본다.
             if pm.optionVar(exists=optionvar):
                 last_dir = pm.optionVar(query=optionvar)
             else:
                 last_dir = ''
 
             response = QFileDialog.getSaveFileName(
-                caption='메쉬 칼라가 저장될 파일의 이름을 지정하세요',
+                caption='카메라가 저장될 위치를 지정하세요',
                 dir=last_dir,
-                filter='Maya Scenes (*.mb; *.ma)',
+                filter='Alembic File (*.abc)',
                 parent=self,
             )
             if not response[0]:
                 return
             cam_file = response[0]
-
-            if cam_file.endswith('.ma'):
-                file_type = 'mayaAscii'
-            elif cam_file.endswith('.mb'):
-                file_type = 'mayaBinary'
-            if not file_type:
-                return
-
             dirs(os.path.dirname(cam_file))
-
             pm.optionVar(stringValue=(optionvar, os.path.dirname(cam_file)))
 
         cam = pm.PyNode(self.currentItem().text())
@@ -358,15 +349,14 @@ class CameraViewList(QListWidget):
         pm.parent(dup_cam, world=True)
         pm.rename(dup_cam, cam.name() + '_baked')
         constraint = pm.parentConstraint(cam, dup_cam)
-        pm.bakeResults(
-            [dup_cam, dup_cam_shape],
-            shape=True,
-            simulation=True,
-            time=(
-                pm.playbackOptions(query=True, minTime=True - 2),
-                pm.playbackOptions(query=True, maxTime=True + 2),
-            ),
-        )
+        st = pm.playbackOptions(query=True, minTime=True - 2)
+        ed = pm.playbackOptions(query=True, maxTime=True + 2)
+        # pm.bakeResults(
+        #     [dup_cam, dup_cam_shape],
+        #     shape=True,
+        #     simulation=True,
+        #     time=(st, ed),
+        # )
         pm.delete(constraint)
 
         pm.undoInfo(closeChunk=True)
@@ -375,15 +365,17 @@ class CameraViewList(QListWidget):
             pm.rename(dup_cam, cam.name())
             pm.select(dup_cam, replace=True)
             pm.delete(pm.ls(type='unknown'))
-            cmds.file(
-                cam_file,
-                force=True,
-                options="v=0;",
-                type=file_type,
-                preserveReferences=True,
-                exportSelected=True,
-            )
-            pm.delete(dup_cam)
+            pm.mel.eval('AbcExport -j "-frameRange {} {} -noNormals -eulerFilter -dataFormat ogawa -root {} -file {}"'.format(st, ed, dup_cam.name(), cam_file))
+            # cmds.file(
+            #     cam_file,
+            #     force=True,
+            #     options="v=0;",
+            #     type=file_type,
+            #     preserveReferences=True,
+            #     exportSelected=True,
+            # )
+            if option != create:
+                pm.delete(dup_cam)
 
 
 def main():
