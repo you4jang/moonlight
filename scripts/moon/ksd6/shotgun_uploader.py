@@ -157,6 +157,14 @@ class ShotgunUploaderWindow(MainDialog):
             self.file_list_widget.addItem(f)
         self.file_list_widget.sortItems()
 
+    def get_sg_connection(self, name):
+        if not hasattr(self, 'sg_connections'):
+            self.sg_connections = {}
+        if name not in self.sg_connections:
+            sg = moon.shotgun.Shotgun(name)
+            self.sg_connections[name] = sg
+        return self.sg_connections[name]
+
     def upload(self, selected=False):
         if selected:
             sel = self.file_list_widget.selectedItems()
@@ -175,7 +183,10 @@ class ShotgunUploaderWindow(MainDialog):
         elif status == 'Final':
             status_code = 'fin'
         else:
+            print 1
             return
+        print status_code
+        return
         valid_files = []
         for s in sel:
             filename = s.text()
