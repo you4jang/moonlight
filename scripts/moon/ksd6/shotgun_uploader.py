@@ -183,10 +183,7 @@ class ShotgunUploaderWindow(MainDialog):
         elif status == 'Final':
             status_code = 'fin'
         else:
-            print 1
             return
-        print status_code
-        return
         valid_files = []
         for s in sel:
             filename = s.text()
