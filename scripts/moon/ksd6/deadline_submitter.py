@@ -245,8 +245,9 @@ class DeadlineSubmitterWindow(MainDialog):
             self.render_layer_checkbox.setChecked(True)
 
         # 시퀀스 저장 경로 지정
-        ep = 'EP01'
-        cut = 'C001'
+        buf = basenameex(cur).split('_')
+        ep = buf[0]
+        cut = buf[1]
         path = pathjoin(config.SV_REN_PATH, ep, cut)
         self.project_path_field.setText(path)
         self.output_field.setText(path)
