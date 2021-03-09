@@ -180,7 +180,7 @@ class DeadlineSubmitterWindow(MainDialog):
         ####################################################################################################
         # 스타트업
         ####################################################################################################
-        # self.init_pools()
+        self.init_pools()
         self.initialize_scene()
 
     def on_using_render_layer_checkbox_changed(self, state):
