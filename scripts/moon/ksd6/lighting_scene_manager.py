@@ -1080,7 +1080,7 @@ class LightingSceneManagerWindow(MainWindow):
                     sv_ani_file,
                     reference=True,
                     namespace=':',
-                    prompt=False,
+                    # prompt=False,
                     options='v=0',
                     ignoreVersion=True,
                 )
@@ -1094,7 +1094,7 @@ class LightingSceneManagerWindow(MainWindow):
                     sv_scn_file,
                     force=True,
                     open=True,
-                    prompt=False,
+                    # prompt=False,
                     ignoreVersion=True,
                     preserveReferences=True,
                 )
