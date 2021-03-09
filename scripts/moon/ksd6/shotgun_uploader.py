@@ -222,7 +222,7 @@ class ShotgunUploaderWindow(MainDialog):
                 'updated_by': login_user,
             }
             sg_version = sg.create('Version', data)
-            sg.upload_thumbnail('Version', sg_version['id'], pathjoin(path, filename))
+            sg.upload('Version', sg_version['id'], pathjoin(path, filename), 'sg_uploaded_movie')
         self.prog_bar.reset()
 
 
