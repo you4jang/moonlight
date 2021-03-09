@@ -49,6 +49,17 @@ MENUS = [
                     ),
                 },
             },
+            {
+                'kwargs': {
+                    'label': 'ksd6 - Shotgun Uploader',
+                    'image': 'ksd6/shotgun_uploader.png',
+                    'command': crjoin(
+                        'import moon.ksd6.shotgun_uploader',
+                        'reload(moon.ksd6.shotgun_uploader)',
+                        'moon.ksd6.shotgun_uploader.main()',
+                    ),
+                },
+            },
         ],
     },
     ####################################################################################################
