@@ -179,7 +179,7 @@ class ShotgunUploaderWindow(MainDialog):
         task = self.task_combo.currentText()
         status = self.status_combo.currentText()
         if status == 'Pending Review':
-            status_code = 'pev'
+            status_code = 'rev'
         elif status == 'Final':
             status_code = 'fin'
         else:
