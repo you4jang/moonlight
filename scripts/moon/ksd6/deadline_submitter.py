@@ -272,87 +272,20 @@ class DeadlineSubmitterWindow(MainDialog):
         return '{}-{}'.format(start_frame, end_frame)
 
     def submit_to_deadline(self):
-        local_scene_file = cmds.file(query=True, sceneName=True)
-        server_scene_file = 'r' + local_scene_file[1:]
-
-        server_root_path = dirs(os.path.dirname(server_scene_file))
-        server_tex_path = dirs(pathjoin(server_root_path, 'texture'))
-
-        ####################################################################################################
-        # 텍스쳐 파일 정리
-        ####################################################################################################
-        unknown_tex_nodes = []
-        unknown_rs_tex_nodes = []
-
-        for tex in pm.ls(type='file'):
-            tex_file = tex.fileTextureName.get()
-            if not tex_file or tex_file.strip() == '':
-                unknown_tex_nodes.append(tex)
-                continue
-            regex = re.match('r:', tex_file, re.IGNORECASE)
-            if not regex:
-                unknown_tex_nodes.append(tex)
-
-        for tex in pm.ls(type=('RedshiftNormalMap', 'RedshiftSprite')):
-            tex_file = tex.tex0.get()
-            if not tex_file or tex_file.strip() == '':
-                unknown_rs_tex_nodes.append(tex_file)
-                continue
-            regex = re.match('r:', tex_file, re.IGNORECASE)
-            if not regex:
-                unknown_rs_tex_nodes.append(tex)
-
-        ####################################################################################################
-        # 레퍼런스 정리
-        ####################################################################################################
-        for ref in pm.ls(type='reference'):
-            try:
-                filename = ref.fileName(True, False, False)
-            except:
-                continue
-            if filename.lower().startswith('d:'):
-                new_filename = 'r:' + filename[2:]
-                # R 서버에 파일이 존재하지 않는다면 파일을 복사한다.
-                if not os.path.isfile(new_filename):
-                    dirs(os.path.dirname(new_filename))
-                    shutil.copy2(filename, new_filename)
-                r = pm.FileReference(ref)
-                r.load(new_filename)
-
         # 파일을 저장하기 직전 반드시 마스터 렌더 레이어로 이동한 후 저장하도록 한다.
         pm.editRenderLayerGlobals(currentRenderLayer='defaultRenderLayer')
 
-        ####################################################################################################
         # 파일 강제 저장
-        ####################################################################################################
         if cmds.file(query=True, modified=True):
             cmds.file(force=True, save=True)
 
-        ####################################################################################################
-        # 마야 씬 익스포트
-        ####################################################################################################
-        cmds.file(
-            server_scene_file,
-            force=True,
-            options='v=0;',
-            type='mayaBinary',
-            preserveReferences=True,
-            exportAll=True,
-        )
-
-        ####################################################################################################
         # 아웃풋 경로 생성
-        ####################################################################################################
         output_path = dirs(self.output_field.text())
 
-        ####################################################################################################
         # 로그인 쿠키
-        ####################################################################################################
         cookie = MoonLoginCookie.get_login_user()
 
-        ####################################################################################################
         # 주어진 데이터를 이용하여 데드라인에 잡을 생성한다.
-        ####################################################################################################
         priority = self.priority_field.text()
         pool = self.pool_combo.currentText()
         sec_pool = self.sec_pool_combo.currentText()
