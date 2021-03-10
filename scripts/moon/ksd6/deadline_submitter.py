@@ -276,6 +276,7 @@ class DeadlineSubmitterWindow(MainDialog):
         pm.editRenderLayerGlobals(currentRenderLayer='defaultRenderLayer')
 
         # 파일 강제 저장
+        cur = cmds.file(query=True, sceneName=True)
         if cmds.file(query=True, modified=True):
             cmds.file(force=True, save=True)
 
@@ -323,7 +324,7 @@ class DeadlineSubmitterWindow(MainDialog):
             job.add('InitialStatus', 'Suspended')
 
         plugin = moon.deadline.PluginInfo()
-        plugin.add('SceneFile', server_scene_file)
+        plugin.add('SceneFile', cur)
         plugin.add('Camera', self.camera_combo.currentText())
         plugin.add('ProjectPath', pathjoin('r:/wms/pipeline/work', self.get_project_code()))
         plugin.add('OutputFilePath', output_path)
@@ -376,10 +377,10 @@ class DeadlineSubmitterWindow(MainDialog):
                     plugin.add('GPUsPerTask', gpus_per_task)
 
                 # 데드라인에 던져준다.
-                submission = moon.deadline.Submission(job, plugin, server_scene_file)
+                submission = moon.deadline.Submission(job, plugin, cur)
                 submission.submit()
         else:
-            submission = moon.deadline.Submission(job, plugin, server_scene_file)
+            submission = moon.deadline.Submission(job, plugin, cur)
             submission.submit()
 
         # 데드라인에 잡을 생성하여 전달하고 난 후 서브미터를 종료한다.
