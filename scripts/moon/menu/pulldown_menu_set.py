@@ -24,6 +24,39 @@ MENUS = [
             ),
         },
     },
+    {
+        'kwargs': {
+            'label': 'Match Transform',
+            'image': 'match_transform.bmp',
+            'command': crjoin(
+                'import moon.manip',
+                'reload(moon.manip)',
+                'moon.manip.match_transform()',
+            ),
+        },
+    },
+    {
+        'kwargs': {
+            'label': 'Match Position',
+            'image': 'match_position.bmp',
+            'command': crjoin(
+                'import moon.manip',
+                'reload(moon.manip)',
+                'moon.manip.match_position()',
+            ),
+        },
+    },
+    {
+        'kwargs': {
+            'label': 'Match Scale',
+            'image': 'match_scale.bmp',
+            'command': crjoin(
+                'import moon.manip',
+                'reload(moon.manip)',
+                'moon.manip.match_scale()',
+            ),
+        },
+    },
     ####################################################################################################
     # 프로젝트
     ####################################################################################################
