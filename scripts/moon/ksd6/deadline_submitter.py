@@ -281,6 +281,7 @@ class DeadlineSubmitterWindow(MainDialog):
             cmds.file(force=True, save=True)
 
         # 아웃풋 경로 생성
+        project_path = dirs(self.project_path_field.text())
         output_path = dirs(self.output_field.text())
 
         # 로그인 쿠키
@@ -326,7 +327,7 @@ class DeadlineSubmitterWindow(MainDialog):
         plugin = moon.deadline.PluginInfo()
         plugin.add('SceneFile', cur)
         plugin.add('Camera', self.camera_combo.currentText())
-        plugin.add('ProjectPath', pathjoin('r:/wms/pipeline/work', self.get_project_code()))
+        plugin.add('ProjectPath', project_path)
         plugin.add('OutputFilePath', output_path)
         plugin.add('Renderer', 'vray')
         plugin.add('Version', cmds.about(version=True))
