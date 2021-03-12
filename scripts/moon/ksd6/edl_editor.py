@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from moon.authentication import *
 from moon.qt import *
-import re
+import os
 
 
 class EdlEditorWindow(MainDialog):
