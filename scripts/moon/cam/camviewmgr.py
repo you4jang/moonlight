@@ -18,6 +18,8 @@ class CameraViewManagerWindow(QDialog):
 
     def __init__(self, parent=maya_widget()):
         super(CameraViewManagerWindow, self).__init__(parent)
+        pm.loadPlugin('AbcExport', quiet=True)
+        pm.loadPlugin('AbcImport', quiet=True)
         # 패널을 삭제해주는 MEL을 로딩한다.
         mel.eval('source deletePanel')
         self.ui()
@@ -268,8 +270,6 @@ class _CameraViewList(QListWidget):
         cmds.modelEditor(modelpanel, edit=True, selectionHiliteDisplay=False)
 
     def bake(self):
-        pm.loadPlugin('AbcExport', quiet=True)
-
         buttons = export, create, cancel = '.abc 저장', '씬 안에 생성', '취소'
         option = questionbox(
             parent=self,
