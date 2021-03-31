@@ -14,10 +14,12 @@ import moon.modelpanel
 reload(moon.modelpanel)
 
 
-class SeparatedCameraPanelWindow(QDialog):
+class CameraViewManagerWindow(QDialog):
 
     def __init__(self, parent=maya_widget()):
-        super(SeparatedCameraPanelWindow, self).__init__(parent)
+        super(CameraViewManagerWindow, self).__init__(parent)
+        pm.loadPlugin('AbcExport', quiet=True)
+        pm.loadPlugin('AbcImport', quiet=True)
         # 패널을 삭제해주는 MEL을 로딩한다.
         mel.eval('source deletePanel')
         self.ui()
@@ -52,13 +54,13 @@ class SeparatedCameraPanelWindow(QDialog):
         # 평면 카메라 리스트
         ortho_grp = QGroupBox('Orthographic')
         ortho_grp_layout = QVBoxLayout(ortho_grp)
-        self.ortho_list = CameraViewList(self)
+        self.ortho_list = _CameraViewList(self)
         ortho_grp_layout.addWidget(self.ortho_list)
 
         # 퍼스펙티브 카메라 리스트
         persp_grp = QGroupBox('Perspective')
         persp_grp_layout = QVBoxLayout(persp_grp)
-        self.persp_list = CameraViewList(self)
+        self.persp_list = _CameraViewList(self)
         persp_grp_layout.addWidget(self.persp_list)
 
         ####################################################################################################
@@ -107,12 +109,12 @@ class SeparatedCameraPanelWindow(QDialog):
             self.persp_list.addItem(cam)
 
 
-class CameraViewList(QListWidget):
+class _CameraViewList(QListWidget):
 
     CLONE_PREFIX = 'CLONE'
 
     def __init__(self, parent=None):
-        super(CameraViewList, self).__init__(parent)
+        super(_CameraViewList, self).__init__(parent)
         self.parent = parent
         self.clicked.connect(self.on_camera_selected)
 
@@ -152,7 +154,7 @@ class CameraViewList(QListWidget):
         elif action is not None and action == action_delete:
             self.delete_panel()
         elif action == action_cam_bake_abc:
-            self.bake(alembic=True)
+            self.bake()
 
     def mouseDoubleClickEvent(self, *args, **kwargs):
         """마우스로 더블-클릭 했을 때의 이벤트 재정의"""
@@ -267,9 +269,7 @@ class CameraViewList(QListWidget):
         cmds.modelEditor(modelpanel, edit=True, displayTextures=False)
         cmds.modelEditor(modelpanel, edit=True, selectionHiliteDisplay=False)
 
-    def bake(self, alembic=True):
-        pm.loadPlugin('AbcExport', quiet=True)
-
+    def bake(self):
         buttons = export, create, cancel = '.abc 저장', '씬 안에 생성', '취소'
         option = questionbox(
             parent=self,
@@ -285,8 +285,6 @@ class CameraViewList(QListWidget):
             return
 
         cam_file = None
-        file_type = None
-
         if option == export:
             optionvar = 'camviewmgr_last_exported_path'
 
@@ -351,12 +349,12 @@ class CameraViewList(QListWidget):
         constraint = pm.parentConstraint(cam, dup_cam)
         st = pm.playbackOptions(query=True, minTime=True - 2)
         ed = pm.playbackOptions(query=True, maxTime=True + 2)
-        # pm.bakeResults(
-        #     [dup_cam, dup_cam_shape],
-        #     shape=True,
-        #     simulation=True,
-        #     time=(st, ed),
-        # )
+        pm.bakeResults(
+            [dup_cam, dup_cam_shape],
+            shape=True,
+            simulation=True,
+            time=(st, ed),
+        )
         pm.delete(constraint)
 
         pm.undoInfo(closeChunk=True)
@@ -366,14 +364,6 @@ class CameraViewList(QListWidget):
             pm.select(dup_cam, replace=True)
             pm.delete(pm.ls(type='unknown'))
             pm.mel.eval('AbcExport -j "-frameRange {} {} -noNormals -eulerFilter -dataFormat ogawa -root {} -file {}"'.format(st, ed, dup_cam.name(), cam_file))
-            # cmds.file(
-            #     cam_file,
-            #     force=True,
-            #     options="v=0;",
-            #     type=file_type,
-            #     preserveReferences=True,
-            #     exportSelected=True,
-            # )
             if option != create:
                 pm.delete(dup_cam)
 
@@ -387,5 +377,5 @@ def main():
     except:
         pass
 
-    camviewmgrwin = SeparatedCameraPanelWindow()
+    camviewmgrwin = CameraViewManagerWindow()
     camviewmgrwin.show()

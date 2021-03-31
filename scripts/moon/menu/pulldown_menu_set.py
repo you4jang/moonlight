@@ -73,6 +73,17 @@ MENUS = [
         'sub_menus': [
             {
                 'kwargs': {
+                    'label': 'ksd6 - EDL Editor',
+                    'image': 'ksd6/edl_editor.png',
+                    'command': crjoin(
+                        'import moon.ksd6.edl_editor',
+                        'reload(moon.ksd6.edl_editor)',
+                        'moon.ksd6.edl_editor.main()',
+                    ),
+                },
+            },
+            {
+                'kwargs': {
                     'label': 'ksd6 - Lighting Scene Manager',
                     'image': 'ksd6/lighting_scene_manager.png',
                     'command': crjoin(
