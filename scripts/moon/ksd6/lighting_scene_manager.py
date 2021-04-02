@@ -1335,7 +1335,7 @@ class CopyToWindow(QDialog):
         if not cut:
             return
         cut = cut.strip()
-        regex = re.match(r'^\d\d\d[a-z]?$', cut)
+        regex = re.match(r'^\d\d\d[A-Z]?$', cut)
         if not regex:
             return
 
