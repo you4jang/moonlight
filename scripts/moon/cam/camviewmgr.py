@@ -320,13 +320,13 @@ class _CameraViewList(QListWidget):
                 continue
             pm.delete(child)
 
-        cam_shape.focalLength.connect(dup_cam_shape.focalLength, force=True)
-        cam_shape.nearClipPlane.connect(dup_cam_shape.nearClipPlane, force=True)
-        cam_shape.farClipPlane.connect(dup_cam_shape.farClipPlane, force=True)
-
         dup_cam_shape.focalLength.set(lock=False, keyable=True)
         dup_cam_shape.nearClipPlane.set(lock=False, keyable=True)
         dup_cam_shape.farClipPlane.set(lock=False, keyable=True)
+
+        cam_shape.focalLength.connect(dup_cam_shape.focalLength, force=True)
+        cam_shape.nearClipPlane.connect(dup_cam_shape.nearClipPlane, force=True)
+        cam_shape.farClipPlane.connect(dup_cam_shape.farClipPlane, force=True)
 
         for child in pm.listRelatives(dup_cam, children=True):
             if child.nodeType() == 'camera':
