@@ -13,7 +13,7 @@ class EdlEditorWindow(MainDialog):
         self.ui()
 
     def ui(self):
-        self.setWindowTitle('ksd6 - EDL Editor')
+        self.setWindowTitle('Moonlight - EDL Editor')
         self.setObjectName('ksd6_edl_editor_window')
         self.setMinimumSize(300, 500)
 
@@ -21,12 +21,6 @@ class EdlEditorWindow(MainDialog):
         self.window_layout.setContentsMargins(0, 0, 0, 0)
         self.window_layout.setSpacing(0)
         self.window_layout.setAlignment(Qt.AlignTop)
-
-        self.banner = QLabel()
-        self.banner.setPixmap(QPixmap(img_path('ksd6/banner.png')))
-        self.banner.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
-        self.window_layout.addWidget(self.banner)
-        self.window_layout.addWidget(hline())
 
         ####################################################################################################
         # 메인 레이아웃

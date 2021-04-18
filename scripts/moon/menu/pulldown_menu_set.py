@@ -73,17 +73,6 @@ MENUS = [
         'sub_menus': [
             {
                 'kwargs': {
-                    'label': 'ksd6 - EDL Editor',
-                    'image': 'ksd6/edl_editor.png',
-                    'command': crjoin(
-                        'import moon.ksd6.edl_editor',
-                        'reload(moon.ksd6.edl_editor)',
-                        'moon.ksd6.edl_editor.main()',
-                    ),
-                },
-            },
-            {
-                'kwargs': {
                     'label': 'ksd6 - Lighting Scene Manager',
                     'image': 'ksd6/lighting_scene_manager.png',
                     'command': crjoin(
@@ -107,6 +96,25 @@ MENUS = [
         ],
     },
     ####################################################################################################
+    # 공통
+    ####################################################################################################
+    {
+        'kwargs': {
+            'divider': True,
+            'dividerLabel': 'Common',
+        },
+    },
+    {
+        'kwargs': {
+            'label': 'EDL Editor',
+            'command': crjoin(
+                'import moon.apps.edl_editor',
+                'reload(moon.apps.edl_editor)',
+                'moon.apps.edl_editor.main()',
+            ),
+        },
+    },
+    ####################################################################################################
     # 카메라
     ####################################################################################################
     {
@@ -126,26 +134,4 @@ MENUS = [
             ),
         },
     },
-    # {
-    #     'kwargs': {
-    #         'label': 'Follow Cam',
-    #         'image': 'follow_cam.bmp',
-    #         'command': crjoin(
-    #             'import moon.apps.followcam',
-    #             'reload(moon.apps.followcam)',
-    #             'moon.apps.followcam.create()',
-    #         ),
-    #     },
-    # },
-    # {
-    #     'kwargs': {
-    #         'label': 'Imageplane Tools',
-    #         'image': 'imageplane_tools.png',
-    #         'command': crjoin(
-    #             'import moon.apps.imageplane_tools',
-    #             'reload(moon.apps.imageplane_tools)',
-    #             'moon.apps.imageplane_tools.window()',
-    #         ),
-    #     },
-    # },
 ]
