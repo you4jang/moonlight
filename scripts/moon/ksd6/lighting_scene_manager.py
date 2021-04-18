@@ -280,6 +280,7 @@ class WorkList(QTableWidget):
 
 class LightingSceneManagerWindow(MainWindow):
 
+    FILTER_NAME_PROJECT = '- Project -'
     FILTER_NAME_EPISODE = '- Episode -'
     FILTER_NAME_STATUS = '- Status -'
 
@@ -358,9 +359,6 @@ class LightingSceneManagerWindow(MainWindow):
         self.lt_open_btn1 = FunctionButton('라이팅 열기')
         self.lt_open_btn1.clicked.connect(self.open_lt_file)
         self.function_button_list.append(self.lt_open_btn1)
-        # self.lt_open_btn2 = FunctionButton('라이팅 열기 (작업용)')
-        # self.lt_open_btn2.clicked.connect(partial(self.open_lt_file, in_progress=True))
-        # self.function_button_list.append(self.lt_open_btn2)
 
         status_label = TitleLabel('상태변경')
         self.status_wtg_btn = FunctionButton('Waiting to Start', korean=False)
@@ -412,6 +410,10 @@ class LightingSceneManagerWindow(MainWindow):
         self.filter_layout.setContentsMargins(0, 0, 0, 0)
         self.filter_layout.setSpacing(6)
 
+        self.project_filter_combo = FilterCombobox(self.init_project_filter)
+        self.project_filter_combo.setView(QListView())
+        self.project_filter_combo.setFixedSize(130, 25)
+
         self.episode_filter_combo = FilterCombobox(self.init_episode_filter)
         self.episode_filter_combo.setView(QListView())
         self.episode_filter_combo.setFixedSize(100, 25)
@@ -419,7 +421,7 @@ class LightingSceneManagerWindow(MainWindow):
 
         self.status_filter_combo = FilterCombobox(self.init_status_filter)
         self.status_filter_combo.setView(QListView())
-        self.status_filter_combo.setFixedSize(150, 25)
+        self.status_filter_combo.setFixedSize(130, 25)
         self.status_filter_combo.currentIndexChanged.connect(partial(Combobox.toggle_highlight, self.status_filter_combo))
 
         # 검색버튼
@@ -453,6 +455,7 @@ class LightingSceneManagerWindow(MainWindow):
 
         self.filter_layout.addWidget(self.clear_width_btn)
         self.filter_layout.addItem(QSpacerItem(5, 0))
+        self.filter_layout.addWidget(self.project_filter_combo)
         self.filter_layout.addWidget(self.episode_filter_combo)
         self.filter_layout.addWidget(self.status_filter_combo)
         self.filter_layout.addItem(QSpacerItem(5, 0))
@@ -573,15 +576,49 @@ class LightingSceneManagerWindow(MainWindow):
     def init_work_list_header_widths(self):
         self.work_list.init_cell_widths()
 
+    def init_project_filter(self):
+        log.debug('init_project_filter()')
+
+        disconnect(self.project_filter_combo.currentIndexChanged)
+
+        self.project_filter_combo.clear()
+        self.project_filter_combo.addItem(self.FILTER_NAME_PROJECT)
+
+        project_list = [
+            {
+                'type': 'Project',
+                'id': 122,
+                'name': 'Dance6 Project',
+            },
+            {
+                'type': 'Project',
+                'id': 155,
+                'name': 'Kongsuni7_Project',
+            },
+        ]
+        for i, sg_prj in enumerate(project_list):
+            self.project_filter_combo.addItem(sg_prj['name'])
+            self.project_filter_combo.setItemData(i, sg_prj)
+
+        self.project_filter_combo.currentIndexChanged.connect(self.on_project_changed)
+
+        self.init_episode_filter()
+
     def init_episode_filter(self):
         log.debug('init_episode_filter()')
 
         self.episode_filter_combo.clear()
         self.episode_filter_combo.addItem(self.FILTER_NAME_EPISODE)
 
+        sg_prj_idx = self.project_filter_combo.currentIndex()
+        if sg_prj_idx == 0:
+            return
+
+        sg_prj = self.project_filter_combo.itemData(sg_prj_idx + 1)
+
         sg = self.get_sg_connection('admin_api')
         filters = [
-            ['project', 'is', config.SG_PROJECT],
+            ['project', 'is', sg_prj],
         ]
         order = [
             {'field_name': 'code', 'direction': 'asc'},
@@ -780,7 +817,7 @@ class LightingSceneManagerWindow(MainWindow):
 
     def init_filters(self):
         log.debug('init_filters()')
-        self.init_episode_filter()
+        self.init_project_filter()
         self.init_status_filter()
 
     def init_current_scene(self):
@@ -1239,6 +1276,11 @@ class LightingSceneManagerWindow(MainWindow):
             self.search_tasks()
         elif self.last_searching_mode == 'current':
             self.init_current_scene()
+
+    def on_project_changed(self):
+        Combobox.toggle_highlight(self.project_filter_combo)
+
+        self.init_episode_filter()
 
     def on_item_selection_changed(self):
         for btn in self.function_button_list:
