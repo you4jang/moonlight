@@ -71,17 +71,6 @@ MENUS = [
             'label': 'ksd6',
         },
         'sub_menus': [
-            {
-                'kwargs': {
-                    'label': 'ksd6 - Shotgun Uploader',
-                    'image': 'ksd6/shotgun_uploader.png',
-                    'command': crjoin(
-                        'import moon.ksd6.shotgun_uploader',
-                        'reload(moon.ksd6.shotgun_uploader)',
-                        'moon.ksd6.shotgun_uploader.main()',
-                    ),
-                },
-            },
         ],
     },
     ####################################################################################################
@@ -111,6 +100,17 @@ MENUS = [
                 'import moon.apps.edl_editor',
                 'reload(moon.apps.edl_editor)',
                 'moon.apps.edl_editor.main()',
+            ),
+        },
+    },
+    {
+        'kwargs': {
+            'label': 'Shotgun Uploader',
+            'image': 'shotgun_uploader.png',
+            'command': crjoin(
+                'import moon.apps.shotgun_uploader',
+                'reload(moon.apps.shotgun_uploader)',
+                'moon.apps.shotgun_uploader.main()',
             ),
         },
     },

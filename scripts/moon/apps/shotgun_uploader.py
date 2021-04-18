@@ -7,24 +7,20 @@ from functools import partial
 import re
 import moon.shotgun
 reload(moon.shotgun)
-import moon.ksd6.config as config
-reload(config)
 import pymel.core as pm
 
 
 class ShotgunUploaderWindow(MainDialog):
 
     LAST_DIR_OPTIONVAR = 'ksd6_shotgun_uploader_window_last_dir_optionvar'
+    STORED_PROJECT_INDEX_OPTIONVAR = 'shotgun_uploader_stored_project_index_optionvar'
 
     def __init__(self, parent=maya_widget()):
         super(ShotgunUploaderWindow, self).__init__('ksd6_shotgun_uploader_window', parent)
         self.ui()
-        # self.init_filters()
-        # self.init_current_scene()
-        # self.count_work_list_items()
 
     def ui(self):
-        self.setWindowTitle('ksd6 - Shotgun Uploader')
+        self.setWindowTitle('Shotgun Uploader')
         self.setObjectName('ksd6_shotgun_uploader_window')
         self.setMinimumSize(400, 500)
 
@@ -32,12 +28,6 @@ class ShotgunUploaderWindow(MainDialog):
         self.window_layout.setContentsMargins(0, 0, 0, 0)
         self.window_layout.setSpacing(0)
         self.window_layout.setAlignment(Qt.AlignTop)
-
-        self.banner = QLabel()
-        self.banner.setPixmap(QPixmap(img_path('ksd6/banner.png')))
-        self.banner.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
-        self.window_layout.addWidget(self.banner)
-        self.window_layout.addWidget(hline())
 
         ####################################################################################################
         # 메인 레이아웃
@@ -48,7 +38,13 @@ class ShotgunUploaderWindow(MainDialog):
         self.main_layout.setAlignment(Qt.AlignTop)
         self.window_layout.addLayout(self.main_layout)
 
-        self.main_layout.addWidget(Label('폴더'))
+        # 프로젝트 선택
+        self.project_filter_combo = Combobox(korean=False)
+        self.project_filter_combo.setView(QListView())
+        self.project_filter_combo.setFixedHeight(25)
+        self.init_project_filter()
+        self.main_layout.addWidget(self.project_filter_combo)
+        self.main_layout.addItem(QSpacerItem(0, 20))
 
         path_layout = QHBoxLayout()
         reload_btn = IconButton('reload.png', 25, 17)
@@ -112,6 +108,27 @@ class ShotgunUploaderWindow(MainDialog):
 
         restore_window(self)
         self.restore_file_path()
+
+    def init_project_filter(self):
+        project_list = [
+            {
+                'type': 'Project',
+                'id': 122,
+                'name': 'Dance6 Project',
+            },
+            {
+                'type': 'Project',
+                'id': 155,
+                'name': 'Kongsuni7_Project',
+            },
+        ]
+        self.project_filter_combo.clear()
+        for i, sg_prj in enumerate(project_list):
+            self.project_filter_combo.addItem(sg_prj['name'])
+            self.project_filter_combo.setItemData(i, sg_prj)
+        if pm.optionVar(exists=self.STORED_PROJECT_INDEX_OPTIONVAR):
+            idx = pm.optionVar(query=self.STORED_PROJECT_INDEX_OPTIONVAR)
+            self.project_filter_combo.setCurrentIndex(idx)
 
     def browse_path(self):
         last_dir = self.path_field.text()
@@ -195,17 +212,18 @@ class ShotgunUploaderWindow(MainDialog):
             valid_files.append((filename, ep, cut))
         self.prog_bar.reset()
         self.prog_bar.setMaximum(len(valid_files))
+        sg_prj = self.get_selected_sg_project()
         for filename, ep, cut in valid_files:
             self.prog_bar.setValue(self.prog_bar.value() + 1)
             shot_name = namejoin(ep, cut)
             filters = [
-                ['project', 'is', config.SG_PROJECT],
+                ['project', 'is', sg_prj],
                 ['code', 'is', shot_name],
             ]
             sg_shot = sg.find_one('Shot', filters)
 
             filters = [
-                ['project', 'is', config.SG_PROJECT],
+                ['project', 'is', sg_prj],
                 ['content', 'is', task],
                 ['entity', 'is', sg_shot],
             ]
@@ -214,7 +232,7 @@ class ShotgunUploaderWindow(MainDialog):
 
             login_user = MoonLoginCookie.get_login_user().sg_user
             data = {
-                'project': config.SG_PROJECT,
+                'project': sg_prj,
                 'entity': sg_shot,
                 'sg_task': sg_task,
                 'code': basenameex(filename),
@@ -224,6 +242,18 @@ class ShotgunUploaderWindow(MainDialog):
             sg_version = sg.create('Version', data)
             sg.upload('Version', sg_version['id'], pathjoin(path, filename), 'sg_uploaded_movie')
         self.prog_bar.reset()
+
+    def get_server_root_path(self):
+        idx = self.project_filter_combo.currentIndex()
+        if idx == 0:
+            path = pathjoin('K:', 'KongsuniDance6')
+        else:
+            path = pathjoin('K:', 'Kongsuni7')
+        return path
+
+    def get_selected_sg_project(self):
+        idx = self.project_filter_combo.currentIndex()
+        return self.project_filter_combo.itemData(idx)
 
 
 @authorized
