@@ -403,7 +403,7 @@ class LightingSceneManagerWindow(MainWindow):
         self.filter_layout.setContentsMargins(0, 0, 0, 0)
         self.filter_layout.setSpacing(6)
 
-        self.project_filter_combo = FilterCombobox(self.init_project_filter)
+        self.project_filter_combo = Combobox(korean=False)
         self.project_filter_combo.setView(QListView())
         self.project_filter_combo.setFixedSize(130, 25)
 
@@ -598,15 +598,9 @@ class LightingSceneManagerWindow(MainWindow):
         self.episode_filter_combo.clear()
         self.episode_filter_combo.addItem(self.FILTER_NAME_EPISODE)
 
-        sg_prj_idx = self.project_filter_combo.currentIndex()
-        if sg_prj_idx == 0:
-            return
-
-        sg_prj = self.project_filter_combo.itemData(sg_prj_idx)
-
         sg = self.get_sg_connection('admin_api')
         filters = [
-            ['project', 'is', sg_prj],
+            ['project', 'is', self.get_selected_sg_project()],
         ]
         order = [
             {'field_name': 'code', 'direction': 'asc'},
@@ -1268,7 +1262,6 @@ class LightingSceneManagerWindow(MainWindow):
             self.init_current_scene()
 
     def on_project_changed(self):
-        Combobox.toggle_highlight(self.project_filter_combo)
         pm.optionVar(intValue=(self.STORED_PROJECT_INDEX_OPTIONVAR, self.project_filter_combo.currentIndex()))
         self.init_episode_filter()
 
