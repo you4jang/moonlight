@@ -73,17 +73,6 @@ MENUS = [
         'sub_menus': [
             {
                 'kwargs': {
-                    'label': 'ksd6 - Lighting Scene Manager',
-                    'image': 'ksd6/lighting_scene_manager.png',
-                    'command': crjoin(
-                        'import moon.ksd6.lighting_scene_manager',
-                        'reload(moon.ksd6.lighting_scene_manager)',
-                        'moon.ksd6.lighting_scene_manager.main()',
-                    ),
-                },
-            },
-            {
-                'kwargs': {
                     'label': 'ksd6 - Shotgun Uploader',
                     'image': 'ksd6/shotgun_uploader.png',
                     'command': crjoin(
@@ -102,6 +91,17 @@ MENUS = [
         'kwargs': {
             'divider': True,
             'dividerLabel': 'Common',
+        },
+    },
+    {
+        'kwargs': {
+            'label': 'Lighting Scene Manager',
+            'image': 'ksd6/lighting_scene_manager.png',
+            'command': crjoin(
+                'import moon.apps.lighting_scene_manager',
+                'reload(moon.apps.lighting_scene_manager)',
+                'moon.apps.lighting_scene_manager.main()',
+            ),
         },
     },
     {

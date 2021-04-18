@@ -10,24 +10,25 @@ import time
 import shutil
 
 import moon.clean
-reload(moon.clean)
 import moon.context
-reload(moon.context)
 import moon.modelpanel
-reload(moon.modelpanel)
 import moon.scriptjob
-reload(moon.scriptjob)
 import moon.timeline
-reload(moon.timeline)
 import moon.log
-reload(moon.log)
 import moon.shotgun
-reload(moon.shotgun)
-import moon.ksd6.config as config
-reload(config)
+import moon.apps.config as config
 
 import maya.cmds as cmds
 import pymel.core as pm
+
+reload(moon.clean)
+reload(moon.context)
+reload(moon.modelpanel)
+reload(moon.scriptjob)
+reload(moon.timeline)
+reload(moon.log)
+reload(moon.shotgun)
+reload(config)
 
 
 log = moon.log.get_logger('lighting_scene_manager')
@@ -280,7 +281,7 @@ class WorkList(QTableWidget):
 
 class LightingSceneManagerWindow(MainWindow):
 
-    FILTER_NAME_PROJECT = '- Project -'
+    STORED_PROJECT_INDEX_OPTIONVAR = 'lighting_scene_manager_stored_project_index_optionvar'
     FILTER_NAME_EPISODE = '- Episode -'
     FILTER_NAME_STATUS = '- Status -'
 
@@ -314,13 +315,6 @@ class LightingSceneManagerWindow(MainWindow):
         self.window_layout.setContentsMargins(0, 0, 0, 0)
         self.window_layout.setSpacing(0)
         self.window_layout.setAlignment(Qt.AlignTop)
-
-        self.banner = QLabel()
-        self.banner.setPixmap(QPixmap(img_path('ksd6/banner.png')))
-        self.banner.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
-
-        self.window_layout.addWidget(self.banner)
-        self.window_layout.addWidget(hline())
 
         self.center_layout = QHBoxLayout()
         self.center_layout.setContentsMargins(9, 9, 9, 9)
@@ -385,7 +379,6 @@ class LightingSceneManagerWindow(MainWindow):
         self.left_layout.addWidget(self.an_open_btn)
         self.left_layout.addWidget(self.lt_create_btn)
         self.left_layout.addWidget(self.lt_open_btn1)
-        # self.left_layout.addWidget(self.lt_open_btn2)
         self.left_layout.addItem(QSpacerItem(0, 15))
         self.left_layout.addWidget(status_label)
         self.left_layout.addWidget(self.status_wtg_btn)
@@ -578,12 +571,6 @@ class LightingSceneManagerWindow(MainWindow):
 
     def init_project_filter(self):
         log.debug('init_project_filter()')
-
-        disconnect(self.project_filter_combo.currentIndexChanged)
-
-        self.project_filter_combo.clear()
-        self.project_filter_combo.addItem(self.FILTER_NAME_PROJECT)
-
         project_list = [
             {
                 'type': 'Project',
@@ -596,12 +583,15 @@ class LightingSceneManagerWindow(MainWindow):
                 'name': 'Kongsuni7_Project',
             },
         ]
+        disconnect(self.project_filter_combo.currentIndexChanged)
+        self.project_filter_combo.clear()
         for i, sg_prj in enumerate(project_list):
             self.project_filter_combo.addItem(sg_prj['name'])
             self.project_filter_combo.setItemData(i, sg_prj)
-
+        if pm.optionVar(exists=self.STORED_PROJECT_INDEX_OPTIONVAR):
+            idx = pm.optionVar(query=self.STORED_PROJECT_INDEX_OPTIONVAR)
+            self.project_filter_combo.setCurrentIndex(idx)
         self.project_filter_combo.currentIndexChanged.connect(self.on_project_changed)
-
         self.init_episode_filter()
 
     def init_episode_filter(self):
@@ -614,7 +604,7 @@ class LightingSceneManagerWindow(MainWindow):
         if sg_prj_idx == 0:
             return
 
-        sg_prj = self.project_filter_combo.itemData(sg_prj_idx + 1)
+        sg_prj = self.project_filter_combo.itemData(sg_prj_idx)
 
         sg = self.get_sg_connection('admin_api')
         filters = [
@@ -664,15 +654,15 @@ class LightingSceneManagerWindow(MainWindow):
         status = self.get_selected_status()
 
         sg = self.get_sg_connection('admin_api')
-
+        sg_project = self.get_selected_sg_project()
         lgt_filters = [
-            ['project', 'is', config.SG_PROJECT],
+            ['project', 'is', sg_project],
             ['step', 'is', config.SG_STEP_LIGHTING],
             ['content', 'is', 'Lighting'],
         ]
 
         anfx_filters = [
-            ['project', 'is', config.SG_PROJECT],
+            ['project', 'is', sg_project],
             {
                 'filter_operator': 'any',
                 'filters': [
@@ -845,6 +835,10 @@ class LightingSceneManagerWindow(MainWindow):
 
         self.search_tasks(shot=shot, filtered_task_list=step)
 
+    def get_selected_sg_project(self):
+        idx = self.project_filter_combo.currentIndex()
+        return self.project_filter_combo.itemData(idx)
+
     def get_sg_connection(self, name):
         if not hasattr(self, 'sg_connections'):
             self.sg_connections = {}
@@ -866,10 +860,20 @@ class LightingSceneManagerWindow(MainWindow):
             return
         return self.status_filter_combo.currentText()
 
-    @staticmethod
-    def get_server_path(shot_name):
+    def get_server_root_path(self):
+        idx = self.project_filter_combo.currentIndex()
+        if idx == 0:
+            path = pathjoin('K:', 'KongsuniDance6')
+        else:
+            path = pathjoin('K:', 'Kongsuni7')
+        return path
+
+    def get_server_path(self, shot_name):
         ep = shot_name.split('_')[0]
-        return dirs(pathjoin(config.SV_LGT_PATH, ep))
+        return dirs(pathjoin(self.get_server_root_path(), '04_LRComp', '01_Lighting', ep))
+
+    def get_server_ren_path(self):
+        return dirs(pathjoin(self.get_server_root_path(), '04_LRComp', '04_Render'))
 
     @staticmethod
     def get_episode_from_shot(shot_name):
@@ -884,13 +888,15 @@ class LightingSceneManagerWindow(MainWindow):
     def get_server_ani_path(self, shot_name):
         ep = self.get_episode_from_shot(shot_name)
         cut = self.get_cut_from_shot(shot_name)
-        return pathjoin(config.SV_ANI_PATH, ep, cut, 'fdb')
+        return pathjoin(self.get_server_root_path(), ep, cut, 'fdb')
 
     def get_server_ani_file(self, shot_name):
         buf = shot_name.split('_')
         ep = buf[0]
         cut = buf[1]
         path = self.get_server_ani_path(shot_name)
+        if not path:
+            return
         return pathjoin(path, namejoin(ep, cut, 'fdb', 'v001.ma'))
 
     def get_server_file(self, name):
@@ -955,7 +961,7 @@ class LightingSceneManagerWindow(MainWindow):
 
         sg = self.get_sg_connection('admin_api')
         filters = [
-            ['project', 'is', config.SG_PROJECT],
+            ['project', 'is', self.get_selected_sg_project()],
             ['step', 'is', config.SG_STEP_LIGHTING],
             ['content', 'is', 'Lighting'],
             ['entity.Shot.code', 'is', dst_shot_name],
@@ -1182,7 +1188,7 @@ class LightingSceneManagerWindow(MainWindow):
         # 작업경로를 맞춰준다.
         ep = self.get_episode_from_shot(shot_name)
         cut = self.get_cut_from_shot(shot_name)
-        sv_prj_path = dirs(pathjoin(config.SV_REN_PATH, ep, cut))
+        sv_prj_path = dirs(pathjoin(self.get_server_ren_path(), ep, cut))
         log.debug('sv_prj_path : {}'.format(sv_prj_path))
         pm.workspace(sv_prj_path, openWorkspace=True)
 
@@ -1279,7 +1285,7 @@ class LightingSceneManagerWindow(MainWindow):
 
     def on_project_changed(self):
         Combobox.toggle_highlight(self.project_filter_combo)
-
+        pm.optionVar(intValue=(self.STORED_PROJECT_INDEX_OPTIONVAR, self.project_filter_combo.currentIndex()))
         self.init_episode_filter()
 
     def on_item_selection_changed(self):
