@@ -3,16 +3,12 @@ from moon.authentication import *
 from moon.path import *
 from moon.qt import *
 import os
-import re
-import shutil
 import subprocess
 import maya.cmds as cmds
 import pymel.core as pm
 import moon.deadline
-reload(moon.deadline)
 import moon.scriptjob
-import moon.ksd6.config as config
-reload(config)
+reload(moon.deadline)
 
 
 class DeadlineSubmitterWindow(MainDialog):
@@ -33,7 +29,7 @@ class DeadlineSubmitterWindow(MainDialog):
         self.ui()
 
     def ui(self):
-        self.setWindowTitle('ksd6 - Deadline Submitter')
+        self.setWindowTitle('Deadline Submitter')
 
         self.window_layout = QVBoxLayout(self)
         self.window_layout.setContentsMargins(0, 0, 0, 0)
@@ -248,23 +244,9 @@ class DeadlineSubmitterWindow(MainDialog):
         buf = basenameex(cur).split('_')
         ep = buf[0]
         cut = buf[1]
-        path = pathjoin(config.SV_REN_PATH, ep, cut)
+        path = pathjoin(self.parent.get_server_ren_path(), ep, cut)
         self.project_path_field.setText(path)
         self.output_field.setText(path)
-
-    @staticmethod
-    def get_project_code():
-        current_scene_file = cmds.file(query=True, sceneName=True)
-        if not current_scene_file or current_scene_file == '':
-            return
-
-        path = os.path.dirname(current_scene_file)
-
-        # 경로를 분리하여 이것이 wms 작업파일인지 판단하고,
-        # wms 작업파일이 맞다면 미리 지정해놓은 프로젝트 코드의 자리에서 프로젝트 코드를 확인한다.
-        buf = path.split('/')
-        if buf[1] == 'wms' and buf[2] == 'pipeline' and buf[3] == 'work':
-            return buf[4]
 
     def get_frame_range(self):
         start_frame = self.start_frame_field.text()
@@ -315,11 +297,6 @@ class DeadlineSubmitterWindow(MainDialog):
         job.add('MachineLimit', self.limit_machine_field.text())
         job.add('ConcurrentTasks', concurrent_task)
         job.add('OutputDirectory0', output_path)
-        # job.add('Pool', 'maya')
-        # job.add('Protected', 'true')
-        # job.add('MinRenderTimeSeconds', '5')
-        # job.add('TaskTimeoutMinutes', '180')
-        # job.add('EnableAutoTimeout', 'true')
 
         if self.suspended_checkbox.isChecked():
             job.add('InitialStatus', 'Suspended')
@@ -335,10 +312,6 @@ class DeadlineSubmitterWindow(MainDialog):
         plugin.add('StrictErrorChecking', True)
         plugin.add('GPUsPerTask', gpus_per_task)
         plugin.add('RedshiftVerbose', '2')
-        # plugin.add('LocalRendering', 'true')
-        # plugin.add('Width', '1920')
-        # plugin.add('Height', '1080')
-        # plugin.add('RenderLayer', data['layer'])
 
         # 렌더레이어를 사용하기로 되어있다면,
         # 서브미션을 각각 생성해서 던져주어야 한다.
@@ -685,7 +658,7 @@ class IndividualRenderLayerSettingCreateWindow(QDialog):
 
 
 @authorized
-def main(parent=maya_widget()):
+def main(parent):
     global submitterwin
 
     try:

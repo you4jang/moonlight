@@ -549,11 +549,9 @@ class LightingSceneManagerWindow(MainWindow):
             cmds.file(an_file, force=True, open=True, ignoreVersion=True, prompt=False, options='v=0')
 
     def open_deadline_submitter(self):
-        import moon.ksd6.deadline_submitter
-        reload(moon.ksd6.deadline_submitter)
-        moon.ksd6.deadline_submitter.main()
-        # pm.mel.eval('source "moon/ksd6/deadline_submitter.mel"')
-        # pm.mel.eval('ksd6_deadline_submitter()')
+        import moon.apps.deadline_submitter
+        reload(moon.apps.deadline_submitter)
+        moon.apps.deadline_submitter.main(self)
 
     def open_lt_file(self, in_progress=False):
         sg_task = self.work_list.get_selected_single_sg_task()
@@ -1031,20 +1029,6 @@ class LightingSceneManagerWindow(MainWindow):
         vray_settings.animBatchOnly.set(True)
         render_globals.startFrame.set(pm.playbackOptions(query=True, minTime=True))
         render_globals.endFrame.set(pm.playbackOptions(query=True, maxTime=True))
-
-        # render_globals.imageFilePrefix.set('<RenderLayer>/<AOV>/<Scene>_<RenderLayer>', type='string')
-        # render_globals.enableDefaultLight.set(False)
-        # render_globals.animation.set(True)
-        #
-        # default_resolution = pm.PyNode('defaultResolution')
-        # default_resolution.aspectLock.set(True)
-        # default_resolution.lockDeviceAspectRatio.set(False)
-        # default_resolution.width.set(1920)
-        # default_resolution.height.set(1080)
-        # default_resolution.imageSizeUnits.set(0)
-        # default_resolution.pixelDensityUnits.set(0)
-        # default_resolution.deviceAspectRatio.set(1.7769999504089355)
-        # default_resolution.pixelAspect.set(1)
 
         pm.editRenderLayerGlobals(currentRenderLayer=current_render_layer)
         pm.undoInfo(closeChunk=True)
