@@ -880,7 +880,7 @@ class LightingSceneManagerWindow(MainWindow):
     def get_server_ani_path(self, shot_name):
         ep = self.get_episode_from_shot(shot_name)
         cut = self.get_cut_from_shot(shot_name)
-        return pathjoin(self.get_server_root_path(), ep, cut, 'fdb')
+        return pathjoin(self.get_server_root_path(), '03_Animation', '02_Scenes', ep, cut, 'fdb')
 
     def get_server_ani_file(self, shot_name):
         buf = shot_name.split('_')
@@ -889,6 +889,7 @@ class LightingSceneManagerWindow(MainWindow):
         path = self.get_server_ani_path(shot_name)
         if not path:
             return
+
         return pathjoin(path, namejoin(ep, cut, 'fdb', 'v001.ma'))
 
     def get_server_file(self, name):
