@@ -166,7 +166,7 @@ class ShotgunUploaderWindow(MainDialog):
             return
         self.file_list_widget.clear()
         for f in os.listdir(path):
-            regex = re.match(r'^[KSD6|KS7]_EP\d\d_C\d\d\d[A-Z]?', f, re.IGNORECASE)
+            regex = re.match(r'^(KSD6|KS7)_EP\d\d_C\d\d\d[A-Z]?', f, re.IGNORECASE)
             if not regex:
                 continue
             if not f.endswith(('.mov', '.mp4')):
@@ -204,7 +204,7 @@ class ShotgunUploaderWindow(MainDialog):
         valid_files = []
         for s in sel:
             filename = s.text()
-            regex = re.match(r'^[KSD6|KS7]_(?P<ep>EP\d\d)_(?P<cut>C\d\d\d[A-Z]?)', filename, re.IGNORECASE)
+            regex = re.match(r'^(KSD6|KS7)_(?P<ep>EP\d\d)_(?P<cut>C\d\d\d[A-Z]?)', filename, re.IGNORECASE)
             if not regex:
                 continue
             ep = regex.group('ep')
